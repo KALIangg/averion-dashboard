@@ -1,0 +1,189 @@
+/* PortFolio Card Style /*
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkTree - Frontend</title>
+    <style>
+
+        body {
+            background-color: #121212; /* Cor de fundo */
+            background-image: 
+                linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+                linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+            background-size: 50px 50px; /* Tamanho do grid */
+        }
+
+
+
+
+
+        .GShape {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            top: 20px;
+        }
+
+
+
+        .Shape {
+            transition: 800ms;
+            background-color: rgb(20, 20, 20);
+            border: 2px solid rgb(255, 255, 255);
+            border-radius: 10px;
+            width: 650px;
+            height: 400px;
+            position: relative;
+            top: 100px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* Adicionando as linhas no fundo */
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px; /* Define o espaçamento entre as linhas */
+
+        }
+
+
+        .Links {
+            padding: 10px;
+            text-align: center;
+            transition: 500ms;
+            background-color: white;
+            width: 240px;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+            display: block;
+            position: relative;
+            top: 30px;
+            left: 45px;
+        }
+
+        .Links:hover {
+            background-color: rgb(235, 235, 235);
+            transform: scale(1.05);
+        }
+
+
+        #GitHub {
+            filter: invert(60%) brightness(0.9);
+        }
+
+
+
+        #Linkedin {
+            width: 45px;
+            height: 39px;
+            border: none;
+            border-radius: 10px;
+            position: relative;
+            top: 1px;
+        }
+
+
+        .fotos {
+            transition: 250ms;
+            width: 40px;
+            height: 40px;
+        }
+
+
+        .fotos:hover {
+            transform: scale(1.15);
+        }
+
+        .GPerfil {
+            position: relative;
+            top: 20px;
+        }
+
+        .perfil {
+            width: 120px;
+            height: 120px;
+            border: none;
+            border-radius: 60px;
+            position: relative;
+            left: 25px;
+            top: 17px;
+        }
+
+
+        .Titulo {
+            font-size: 30px;
+            margin: 10px 0 5px;
+            position: relative;
+            top: 15px;
+            left: 25px;
+            color: white;
+        }
+
+        .SubNome {
+            font-size: 20px;
+            color: rgb(161, 161, 161);
+            margin-bottom: 15px;
+        }
+
+        .Shape:hover {
+            border: solid 1px black;
+            transform: translateY(-10px);
+        }
+
+
+        .social-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            position: relative;
+            top: 160px;
+            left: -437px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="GShape">
+    <div class="Shape">
+
+        <div class="GPerfil">
+            <img src="\projeto2\perfil.jpg" class="perfil">
+            <h1 class="Titulo">Bernardo</h1>
+            <h2 class="SubNome">Front-end Developer</h2>
+            <hr>
+        </div>
+
+
+        <form class="GForm">
+            <a class="Links" onclick="Link1">Projetos Scripting</a>
+            <br>
+            <a class="Links" onclick="Link2">Projetos Sistemas</a>
+            <br>
+            <a class="Links" onclick="Link3">Contate-me!</a>
+        </form>
+
+        <div class="social-container">
+            <a href="https://linkedin.com"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQh4bNW4VTRcHNhAGGfL85npVjy7XZwOM6FGg&s" id="Linkedin" class="fotos"></a>
+            <a href="https://github.com/KALIangg"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/180px-GitHub_Invertocat_Logo.svg.png" id="GitHub" class="fotos"></a>
+        </div>
+    </div>
+</div>
+
+    <footer><p>© 2025 - Made by Bernardo. All rights reserved.</p></footer>
+
+
+
+    <script>
+
+    </script>
+
+</body>
+</html>
