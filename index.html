@@ -589,6 +589,120 @@
             font-size: 1.4rem;
         }
         
+        /* ================= SCRIPT TABS SYSTEM ================= */
+        .script-tabs-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 15px;
+        }
+        
+        .script-tabs-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            min-height: 50px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .script-tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        
+        .script-tab {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            color: #a0a0c0;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            min-width: 120px;
+            max-width: 200px;
+            position: relative;
+        }
+        
+        .script-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .script-tab.active {
+            background: rgba(255, 0, 60, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+        
+        .tab-close-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            transition: var(--transition);
+            margin-left: auto;
+        }
+        
+        .tab-close-btn:hover {
+            background: rgba(255, 0, 60, 0.2);
+            color: var(--danger);
+        }
+        
+        .script-tab-actions {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        
+        .tab-action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--light);
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        
+        .tab-action-btn:hover {
+            background: rgba(255, 0, 60, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .script-name-input {
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--light);
+            font-size: 0.9rem;
+            width: 200px;
+            transition: var(--transition);
+        }
+        
+        .script-name-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 0, 60, 0.1);
+        }
+        
         #editor-container {
             flex: 1;
             border: 1px solid var(--border);
@@ -1492,6 +1606,17 @@
             .panels-container {
                 padding: 20px;
             }
+            
+            .script-tabs-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .script-tab-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: center;
+            }
         }
         
         @media (max-width: 768px) {
@@ -1531,6 +1656,11 @@
             .triggers-list {
                 max-height: 250px;
             }
+            
+            .script-tab {
+                min-width: 100px;
+                max-width: 150px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1553,6 +1683,12 @@
             
             .tab-btn span {
                 font-size: 0.75rem;
+            }
+            
+            .script-tab {
+                min-width: 80px;
+                padding: 6px 12px;
+                font-size: 0.8rem;
             }
         }
         
@@ -1688,8 +1824,34 @@
                         </div>
                     </div>
                     
-                    <div id="editor-container">
-                        <!-- Monaco Editor will be loaded here -->
+                    <div class="script-tabs-container">
+                        <div class="script-tabs-header">
+                            <div class="script-tabs" id="scriptTabs">
+                                <!-- Script tabs will be generated here -->
+                            </div>
+                            <div class="script-tab-actions">
+                                <button class="tab-action-btn" onclick="addNewScriptTab()">
+                                    <i class="fas fa-plus"></i>
+                                    Novo Script
+                                </button>
+                                <button class="tab-action-btn" onclick="saveCurrentScript()">
+                                    <i class="fas fa-save"></i>
+                                    Salvar
+                                </button>
+                                <button class="tab-action-btn" onclick="renameCurrentScript()">
+                                    <i class="fas fa-edit"></i>
+                                    Renomear
+                                </button>
+                                <button class="tab-action-btn" onclick="deleteCurrentScript()">
+                                    <i class="fas fa-trash"></i>
+                                    Excluir
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="editor-container">
+                            <!-- Monaco Editor will be loaded here -->
+                        </div>
                     </div>
                     
                     <div class="editor-actions">
@@ -1948,6 +2110,248 @@
         };
         let backdoorDetected = false;
         
+        /* ================= SCRIPT TABS SYSTEM ================= */
+        let scripts = [];
+        let currentScriptId = null;
+        const STORAGE_KEY = 'averion_scripts';
+        
+        // Load scripts from localStorage
+        function loadScripts() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    scripts = JSON.parse(saved);
+                } catch (e) {
+                    scripts = [];
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+            
+            // If no scripts, create a default one
+            if (scripts.length === 0) {
+                addNewScriptTab(true);
+            } else {
+                // Load the first script
+                loadScriptTabs();
+                if (scripts.length > 0) {
+                    currentScriptId = scripts[0].id;
+                    renderScriptTabs();
+                    loadScriptContent(scripts[0].id);
+                }
+            }
+        }
+        
+        // Save scripts to localStorage
+        function saveScripts() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scripts));
+        }
+        
+        // Load script tabs UI
+        function loadScriptTabs() {
+            const tabsContainer = document.getElementById('scriptTabs');
+            tabsContainer.innerHTML = '';
+            
+            scripts.forEach(script => {
+                const tab = document.createElement('div');
+                tab.className = `script-tab ${script.id === currentScriptId ? 'active' : ''}`;
+                tab.dataset.scriptId = script.id;
+                
+                tab.innerHTML = `
+                    <i class="fas fa-file-code"></i>
+                    <span class="tab-title">${script.name}</span>
+                    <button class="tab-close-btn" onclick="closeScriptTab('${script.id}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                tab.onclick = (e) => {
+                    if (!e.target.classList.contains('tab-close-btn')) {
+                        switchToScript(script.id);
+                    }
+                };
+                
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        // Render script tabs
+        function renderScriptTabs() {
+            const tabsContainer = document.getElementById('scriptTabs');
+            tabsContainer.innerHTML = '';
+            
+            scripts.forEach(script => {
+                const tab = document.createElement('div');
+                tab.className = `script-tab ${script.id === currentScriptId ? 'active' : ''}`;
+                tab.dataset.scriptId = script.id;
+                
+                tab.innerHTML = `
+                    <i class="fas fa-file-code"></i>
+                    <span class="tab-title">${script.name}</span>
+                    <button class="tab-close-btn" onclick="closeScriptTab('${script.id}', event)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                tab.onclick = (e) => {
+                    if (!e.target.classList.contains('tab-close-btn') && !e.target.closest('.tab-close-btn')) {
+                        switchToScript(script.id);
+                    }
+                };
+                
+                tabsContainer.appendChild(tab);
+            });
+        }
+        
+        // Add new script tab
+        function addNewScriptTab(isDefault = false) {
+            const scriptId = 'script_' + Date.now();
+            const scriptName = isDefault ? 'Script Principal' : `Script ${scripts.length + 1}`;
+            const defaultContent = isDefault ? 
+                `-- Averion Dashboard v3.0\n-- Sistema de execução remota\n\nprint("Bem-vindo ao Averion!")\n\n-- Exemplo de código\nlocal player = game.Players.LocalPlayer\nif player then\n    print("Player:", player.Name)\nend` :
+                `-- Novo Script\n-- Digite seu código aqui...`;
+            
+            const newScript = {
+                id: scriptId,
+                name: scriptName,
+                content: defaultContent,
+                lastModified: Date.now()
+            };
+            
+            scripts.push(newScript);
+            currentScriptId = scriptId;
+            saveScripts();
+            renderScriptTabs();
+            
+            if (editor) {
+                editor.setValue(defaultContent);
+            }
+            
+            log(`Novo script criado: ${scriptName}`, "success");
+        }
+        
+        // Switch to a script
+        function switchToScript(scriptId) {
+            const script = scripts.find(s => s.id === scriptId);
+            if (!script) return;
+            
+            // Save current script content before switching
+            if (currentScriptId && editor) {
+                const currentScript = scripts.find(s => s.id === currentScriptId);
+                if (currentScript) {
+                    currentScript.content = editor.getValue();
+                    currentScript.lastModified = Date.now();
+                }
+            }
+            
+            currentScriptId = scriptId;
+            renderScriptTabs();
+            loadScriptContent(scriptId);
+            log(`Carregado: ${script.name}`, "info");
+        }
+        
+        // Load script content into editor
+        function loadScriptContent(scriptId) {
+            const script = scripts.find(s => s.id === scriptId);
+            if (!script || !editor) return;
+            
+            editor.setValue(script.content || '');
+        }
+        
+        // Save current script
+        function saveCurrentScript() {
+            if (!currentScriptId || !editor) {
+                log("Nenhum script selecionado para salvar", "warning");
+                return;
+            }
+            
+            const script = scripts.find(s => s.id === currentScriptId);
+            if (script) {
+                script.content = editor.getValue();
+                script.lastModified = Date.now();
+                saveScripts();
+                log(`Script "${script.name}" salvo com sucesso`, "success");
+            }
+        }
+        
+        // Rename current script
+        function renameCurrentScript() {
+            if (!currentScriptId) {
+                log("Nenhum script selecionado para renomear", "warning");
+                return;
+            }
+            
+            const script = scripts.find(s => s.id === currentScriptId);
+            if (script) {
+                const newName = prompt("Digite o novo nome para o script:", script.name);
+                if (newName && newName.trim()) {
+                    script.name = newName.trim();
+                    saveScripts();
+                    renderScriptTabs();
+                    log(`Script renomeado para: ${script.name}`, "info");
+                }
+            }
+        }
+        
+        // Delete current script
+        function deleteCurrentScript() {
+            if (!currentScriptId) {
+                log("Nenhum script selecionado para excluir", "warning");
+                return;
+            }
+            
+            if (scripts.length <= 1) {
+                log("Você não pode excluir o último script", "warning");
+                return;
+            }
+            
+            const script = scripts.find(s => s.id === currentScriptId);
+            if (script && confirm(`Tem certeza que deseja excluir o script "${script.name}"?`)) {
+                const index = scripts.findIndex(s => s.id === currentScriptId);
+                scripts.splice(index, 1);
+                
+                // Switch to another script
+                currentScriptId = scripts.length > 0 ? scripts[0].id : null;
+                saveScripts();
+                renderScriptTabs();
+                
+                if (currentScriptId && editor) {
+                    loadScriptContent(currentScriptId);
+                }
+                
+                log(`Script "${script.name}" excluído`, "info");
+            }
+        }
+        
+        // Close script tab
+        function closeScriptTab(scriptId, event) {
+            if (event) event.stopPropagation();
+            
+            if (scripts.length <= 1) {
+                log("Você não pode fechar o último script", "warning");
+                return;
+            }
+            
+            const script = scripts.find(s => s.id === scriptId);
+            if (script && confirm(`Fechar script "${script.name}"?`)) {
+                const index = scripts.findIndex(s => s.id === scriptId);
+                scripts.splice(index, 1);
+                
+                // If closing current tab, switch to another
+                if (scriptId === currentScriptId) {
+                    currentScriptId = scripts.length > 0 ? scripts[Math.max(0, index - 1)].id : null;
+                }
+                
+                saveScripts();
+                renderScriptTabs();
+                
+                if (currentScriptId && editor) {
+                    loadScriptContent(currentScriptId);
+                }
+                
+                log(`Script "${script.name}" fechado`, "info");
+            }
+        }
+        
         /* ================= CHALLENGE ================= */
         db.ref("auth/challenge").once("value", s => {
             CHALLENGE = s.val();
@@ -1982,7 +2386,10 @@
                         document.getElementById('statusBadge').className = 'status-badge online';
                         document.getElementById('statusBadge').innerHTML = '<i class="fas fa-circle"></i> Online';
                         log("Autenticado com sucesso", "success");
+                        
+                        // Initialize Monaco and load scripts
                         initializeMonaco();
+                        loadScripts();
                     } else {
                         err.innerHTML = '<i class="fas fa-times-circle"></i> Chave de acesso inválida';
                     }
@@ -2038,6 +2445,20 @@
                 }, 100);
                 
                 log("Editor Lua inicializado", "success");
+                
+                // Auto-save when editor loses focus
+                editor.onDidBlurEditorWidget(() => {
+                    saveCurrentScript();
+                });
+                
+                // Auto-save on content change (with debounce)
+                let saveTimeout;
+                editor.onDidChangeModelContent(() => {
+                    if (saveTimeout) clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        saveCurrentScript();
+                    }, 2000);
+                });
             });
         }
         
@@ -2709,6 +3130,20 @@ end`;
             
             // Handle keyboard shortcuts
             document.addEventListener('keydown', (e) => {
+                // Ctrl+S to save script
+                if (e.ctrlKey && e.key === 's' && 
+                    document.getElementById('exec').classList.contains('active')) {
+                    e.preventDefault();
+                    saveCurrentScript();
+                }
+                
+                // Ctrl+N for new script
+                if (e.ctrlKey && e.key === 'n' && 
+                    document.getElementById('exec').classList.contains('active')) {
+                    e.preventDefault();
+                    addNewScriptTab();
+                }
+                
                 // Ctrl+Enter to execute code (in editor tab)
                 if (e.ctrlKey && e.key === 'Enter' && 
                     document.getElementById('exec').classList.contains('active')) {
