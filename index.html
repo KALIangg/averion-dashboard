@@ -813,14 +813,16 @@
             background: rgba(21, 24, 35, 0.8);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            overflow-y: auto;
             padding: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
         }
         
         .player-search {
             margin-bottom: 20px;
             position: relative;
+            flex-shrink: 0;
         }
         
         .search-input {
@@ -850,6 +852,59 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary);
+        }
+        
+        .players-list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            max-height: calc(100vh - 300px);
+            min-height: 300px;
+        }
+        
+        .players-list-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .players-list-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius);
+        }
+        
+        .players-list-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
+        }
+        
+        .players-list-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #b3002a 100%);
+        }
+        
+        .players-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        
+        .players-list-header h3 {
+            font-size: 1.1rem;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .player-count {
+            background: rgba(255, 0, 60, 0.2);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
         
         .player-item {
@@ -1112,9 +1167,63 @@
             background: rgba(21, 24, 35, 0.8);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            overflow-y: auto;
             padding: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .triggers-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        
+        .triggers-list-header h3 {
+            font-size: 1.1rem;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .trigger-count {
+            background: rgba(255, 0, 60, 0.2);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .triggers-list-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            max-height: calc(100vh - 300px);
+            min-height: 300px;
+        }
+        
+        .triggers-list-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .triggers-list-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius);
+        }
+        
+        .triggers-list-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
+        }
+        
+        .triggers-list-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #b3002a 100%);
         }
         
         .trigger-item {
@@ -1198,6 +1307,23 @@
             flex-direction: column;
             gap: 18px;
             margin-bottom: 25px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .args-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .args-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: var(--radius);
+        }
+        
+        .args-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
         }
         
         .arg-item {
@@ -1254,6 +1380,7 @@
             font-weight: 600;
             transition: var(--transition);
             width: 100%;
+            margin-top: 10px;
         }
         
         .btn-add-arg:hover {
@@ -1585,7 +1712,11 @@
                                 <i class="fas fa-search"></i>
                                 <input type="text" class="search-input" id="playerSearch" placeholder="Buscar jogador..." onkeyup="filterPlayers()">
                             </div>
-                            <div id="playersList">
+                            <div class="players-list-header">
+                                <h3><i class="fas fa-users"></i> Jogadores Online</h3>
+                                <div class="player-count" id="playerCount">0 jogadores</div>
+                            </div>
+                            <div class="players-list-content" id="playersList">
                                 <!-- Player list will be populated here -->
                             </div>
                         </div>
@@ -1618,7 +1749,11 @@
                 <div id="triggers" class="panel">
                     <div class="triggers-container">
                         <div class="triggers-list">
-                            <div id="triggersList">
+                            <div class="triggers-list-header">
+                                <h3><i class="fas fa-bolt"></i> RemoteEvents & Functions</h3>
+                                <div class="trigger-count" id="triggerCount">0 triggers</div>
+                            </div>
+                            <div class="triggers-list-content" id="triggersList">
                                 <!-- Triggers list will be populated here -->
                             </div>
                         </div>
@@ -1629,7 +1764,7 @@
                             </div>
                             
                             <div class="args-container">
-                                <h4>Argumentos</h4>
+                                <h4><i class="fas fa-list"></i> Argumentos</h4>
                                 <div id="argsList" class="args-list">
                                     <!-- Arguments will be added here -->
                                 </div>
@@ -1949,9 +2084,26 @@
         
         function renderPlayersList(players) {
             const playersList = document.getElementById('playersList');
-            playersList.innerHTML = '';
+            const playerCount = document.getElementById('playerCount');
             
-            Object.values(players).forEach(player => {
+            playersList.innerHTML = '';
+            const playerArray = Object.values(players);
+            
+            // Update player count
+            playerCount.textContent = `${playerArray.length} jogador${playerArray.length !== 1 ? 'es' : ''}`;
+            
+            if (playerArray.length === 0) {
+                playersList.innerHTML = `
+                    <div class="player-item" style="text-align: center; padding: 40px 20px; background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border);">
+                        <i class="fas fa-users" style="font-size: 2rem; color: var(--primary); margin-bottom: 15px;"></i>
+                        <h4 style="color: var(--light); margin-bottom: 10px;">Nenhum jogador online</h4>
+                        <p style="color: #a0a0c0; font-size: 0.9rem;">Aguarde os jogadores se conectarem ao jogo</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            playerArray.forEach(player => {
                 const playerElement = document.createElement('div');
                 playerElement.className = 'player-item';
                 playerElement.dataset.userId = player.UserId;
@@ -2186,7 +2338,23 @@
         
         function renderTriggersList(triggers) {
             const triggersList = document.getElementById('triggersList');
+            const triggerCount = document.getElementById('triggerCount');
+            
             triggersList.innerHTML = '';
+            
+            // Update trigger count
+            triggerCount.textContent = `${triggers.length} trigger${triggers.length !== 1 ? 's' : ''}`;
+            
+            if (triggers.length === 0) {
+                triggersList.innerHTML = `
+                    <div class="trigger-item" style="text-align: center; padding: 40px 20px; background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border);">
+                        <i class="fas fa-bolt" style="font-size: 2rem; color: var(--primary); margin-bottom: 15px;"></i>
+                        <h4 style="color: var(--light); margin-bottom: 10px;">Nenhum trigger encontrado</h4>
+                        <p style="color: #a0a0c0; font-size: 0.9rem;">Os RemoteEvents/RemoteFunctions do jogo aparecerão aqui</p>
+                    </div>
+                `;
+                return;
+            }
             
             triggers.forEach(trigger => {
                 const triggerElement = document.createElement('div');
@@ -2227,10 +2395,24 @@
             // Update trigger info
             const triggerInfo = document.getElementById('selectedTriggerInfo');
             triggerInfo.innerHTML = `
-                <h3>${trigger.Name}</h3>
-                <p><strong>Tipo:</strong> ${trigger.ClassName}</p>
-                <p><strong>Caminho:</strong> ${trigger.FullPath}</p>
-                <p><strong>Parent:</strong> ${trigger.Parent}</p>
+                <h3 style="color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas ${trigger.ClassName === 'RemoteEvent' ? 'fa-bolt' : 'fa-code'}"></i>
+                    ${trigger.Name}
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #a0a0c0; min-width: 80px;">Tipo:</span>
+                        <span style="color: var(--light); font-weight: 600;">${trigger.ClassName}</span>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <span style="color: #a0a0c0; min-width: 80px;">Caminho:</span>
+                        <span style="color: var(--light); font-family: 'Consolas', monospace; word-break: break-all;">${trigger.FullPath}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #a0a0c0; min-width: 80px;">Parent:</span>
+                        <span style="color: var(--light);">${trigger.Parent}</span>
+                    </div>
+                </div>
             `;
             
             // Clear arguments
@@ -2252,13 +2434,46 @@
             argElement.className = 'arg-item';
             argElement.innerHTML = `
                 <div class="arg-header">
-                    <span>Argumento ${argsList.children.length + 1}</span>
+                    <span style="color: var(--light); font-weight: 600;">Argumento ${argsList.children.length + 1}</span>
                     <span class="arg-type">String</span>
                 </div>
-                <input type="text" class="arg-input" id="arg_${argId}" placeholder="Valor do argumento">
+                <input type="text" class="arg-input" id="arg_${argId}" placeholder="Digite o valor do argumento..." autocomplete="off">
+                <button class="btn-secondary" onclick="removeArgument(this)" style="margin-top: 5px; padding: 8px 12px; font-size: 0.85rem;">
+                    <i class="fas fa-trash"></i> Remover
+                </button>
             `;
             
             argsList.appendChild(argElement);
+            
+            // Scroll to the new argument
+            argElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Focus on the new input
+            setTimeout(() => {
+                document.getElementById(`arg_${argId}`).focus();
+            }, 100);
+        }
+        
+        function removeArgument(btn) {
+            const argItem = btn.closest('.arg-item');
+            if (argItem) {
+                argItem.style.opacity = '0';
+                argItem.style.transform = 'translateX(-10px)';
+                setTimeout(() => {
+                    argItem.remove();
+                    updateArgumentNumbers();
+                }, 300);
+            }
+        }
+        
+        function updateArgumentNumbers() {
+            const args = document.querySelectorAll('.arg-item');
+            args.forEach((arg, index) => {
+                const span = arg.querySelector('.arg-header span');
+                if (span) {
+                    span.textContent = `Argumento ${index + 1}`;
+                }
+            });
         }
         
         function fireTrigger() {
