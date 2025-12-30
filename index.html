@@ -1,85 +1,2542 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-  <title>Averion Dashboard V1</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0f0f0f;
-      color: white;
-      padding: 40px;
-    }
-    .section {
-      margin-bottom: 30px;
-      background: #1a1a1a;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    input, textarea {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 6px;
-      background-color: #292929;
-      color: white;
-    }
-    button {
-      background-color: #3b82f6;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-    button:hover {
-      background-color: #2563eb;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Averion Dashboard v3.0</title>
+    
+    <!-- Firebase v8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <!-- Monaco Editor -->
+    <script src="vs/loader.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ================= RESET & BASE ================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #ff003c; /* Vermelho neon */
+            --primary-dark: #cc002f;
+            --primary-glow: rgba(255, 0, 60, 0.5);
+            --secondary: #151823;
+            --dark: #0b0d12;
+            --darker: #000000; /* Preto */
+            --light: #e6e6eb;
+            --lighter: #f0f0f5;
+            --gray: #2a2d3a;
+            --success: #00c853;
+            --warning: #ff9800;
+            --danger: #ff003c; /* Vermelho neon para danger também */
+            --info: #2196f3;
+            --border: rgba(255, 0, 60, 0.2); /* Borda com vermelho neon */
+            --border-glow: rgba(255, 0, 60, 0.4);
+            --shadow: 0 8px 32px rgba(255, 0, 60, 0.3); /* Sombra neon */
+            --shadow-glow: 0 0 20px rgba(255, 0, 60, 0.5);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* ================= PARTICLE BACKGROUND ================= */
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: linear-gradient(135deg, var(--darker) 0%, #0a0a0a 50%, var(--dark) 100%);
+        }
+        
+        /* ================= GLOW EFFECTS ================= */
+        .glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            z-index: -1;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .glow-1 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .glow-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #cc002f 0%, transparent 70%);
+            bottom: 10%;
+            right: 10%;
+            animation-delay: 5s;
+        }
+        
+        .glow-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 0, 60, 0.3) 0%, transparent 70%);
+            top: 50%;
+            left: 80%;
+            animation-delay: 10s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(-20px, 20px) scale(1.1);
+            }
+            50% {
+                transform: translate(20px, -20px) scale(0.9);
+            }
+            75% {
+                transform: translate(-20px, -20px) scale(1.05);
+            }
+        }
+        
+        /* ================= LAYOUT ================= */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* ================= LOGIN SCREEN ================= */
+        #login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: var(--transition-slow);
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            animation: slideUp 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .login-card {
+            background: rgba(21, 24, 35, 0.9);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), var(--shadow);
+            backdrop-filter: blur(25px);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-slow);
+        }
+        
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 60, 0.1), transparent);
+            transition: var(--transition-slow);
+        }
+        
+        .login-card:hover::before {
+            left: 100%;
+        }
+        
+        .login-card:hover {
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+            transform: translateY(-5px);
+        }
+        
+        .login-logo {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px var(--primary-glow));
+            }
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 20px var(--primary-glow));
+            }
+        }
+        
+        .login-logo i {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .login-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .login-subtitle {
+            color: #a0a0c0;
+            margin-bottom: 35px;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            z-index: 1;
+            font-size: 1.2rem;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 16px 16px 16px 50px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--light);
+            font-size: 1rem;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.2), var(--shadow);
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .input-field::placeholder {
+            color: #6b6b8a;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 0, 60, 0.4), var(--shadow-glow);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: var(--danger);
+            margin-top: 20px;
+            font-size: 0.9rem;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* ================= HEADER ================= */
+        header {
+            background: rgba(11, 13, 18, 0.9);
+            backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .logo i {
+            color: var(--primary);
+            font-size: 1.8rem;
+            animation: spin 10s infinite linear;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status-badge {
+            background: var(--gray);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .status-badge.online {
+            background: rgba(0, 200, 83, 0.2);
+            color: var(--success);
+            box-shadow: 0 0 15px rgba(0, 200, 83, 0.3);
+        }
+        
+        .status-badge.offline {
+            background: rgba(255, 0, 60, 0.2);
+            color: var(--danger);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--light);
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-icon:hover {
+            background: rgba(255, 0, 60, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .mode-switch {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        
+        .mode-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            min-width: 110px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        /* ================= MAIN LAYOUT WITH SIDEBAR TABS ================= */
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: calc(100vh - 76px);
+            overflow: hidden;
+        }
+        
+        /* ================= SIDEBAR TABS ================= */
+        .sidebar-tabs {
+            width: 280px;
+            background: rgba(11, 13, 18, 0.9);
+            backdrop-filter: blur(25px);
+            border-right: 1px solid var(--border);
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 5px 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tab-btn {
+            padding: 20px 30px;
+            background: transparent;
+            border: none;
+            color: #a0a0c0;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            position: relative;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-align: left;
+            letter-spacing: 0.5px;
+            margin: 0 10px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 60, 0.1), transparent);
+            transition: var(--transition);
+        }
+        
+        .tab-btn:hover::before {
+            left: 100%;
+        }
+        
+        .tab-btn:hover {
+            color: var(--light);
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(5px);
+            box-shadow: inset 3px 0 0 var(--primary);
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            background: rgba(255, 0, 60, 0.1);
+            box-shadow: inset 4px 0 0 var(--primary), 0 5px 15px rgba(255, 0, 60, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            right: 20px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .tab-btn i {
+            font-size: 1.2rem;
+            width: 24px;
+        }
+        
+        /* ================= PANELS ================= */
+        .panels-container {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .panel {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+            background: rgba(11, 13, 18, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .panel.active {
+            display: flex;
+        }
+        
+        /* ================= EDITOR PANEL ================= */
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .editor-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--light);
+        }
+        
+        .editor-title i {
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+        
+        #editor-container {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #1e1e1e;
+            min-height: 500px;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        #editor-container:hover {
+            box-shadow: var(--shadow);
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 0, 60, 0.4), var(--shadow-glow);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--light);
+            padding: 14px 32px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+        
+        /* ================= LOGS PANEL ================= */
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logs-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--light);
+        }
+        
+        #logBox {
+            flex: 1;
+            background: rgba(21, 24, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 250px);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .log-entry {
+            padding: 14px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 4px solid var(--gray);
+            animation: slideIn 0.3s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .log-entry:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .log-entry::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+        
+        .log-entry:hover::before {
+            opacity: 1;
+        }
+        
+        .log-entry.info {
+            border-left-color: var(--info);
+            background: rgba(33, 150, 243, 0.05);
+        }
+        
+        .log-entry.success {
+            border-left-color: var(--success);
+            background: rgba(0, 200, 83, 0.05);
+        }
+        
+        .log-entry.warning {
+            border-left-color: var(--warning);
+            background: rgba(255, 152, 0, 0.05);
+        }
+        
+        .log-entry.error {
+            border-left-color: var(--danger);
+            background: rgba(255, 0, 60, 0.05);
+        }
+        
+        .log-entry.exec {
+            border-left-color: var(--primary);
+            background: rgba(255, 0, 60, 0.05);
+        }
+        
+        .log-time {
+            color: #6b6b8a;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .log-time::before {
+            content: '⏱️';
+            font-size: 0.7rem;
+        }
+        
+        .log-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .log-type {
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: var(--gray);
+            color: var(--light);
+            min-width: 70px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .log-message {
+            flex: 1;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+        
+        /* ================= PLAYERS PANEL ================= */
+        .players-container {
+            display: flex;
+            flex: 1;
+            gap: 25px;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .players-list {
+            flex: 0 0 350px;
+            background: rgba(21, 24, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .player-search {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 45px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--light);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.1);
+            outline: none;
+        }
+        
+        .search-input::placeholder {
+            color: #6b6b8a;
+        }
+        
+        .player-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+        }
+        
+        .player-item {
+            padding: 18px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .player-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 60, 0.05), transparent);
+            transition: var(--transition);
+        }
+        
+        .player-item:hover::before {
+            left: 100%;
+        }
+        
+        .player-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 0, 60, 0.1);
+        }
+        
+        .player-item.selected {
+            background: rgba(255, 0, 60, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 0, 60, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.3);
+        }
+        
+        .player-details h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--light);
+        }
+        
+        .player-details p {
+            color: #a0a0c0;
+            font-size: 0.85rem;
+        }
+        
+        .player-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: #a0a0c0;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .player-actions {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+        }
+        
+        .action-section {
+            background: rgba(21, 24, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            flex: 1;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .section-header i {
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+        
+        .section-header h3 {
+            font-size: 1.2rem;
+            color: var(--light);
+            font-weight: 700;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+        
+        .action-btn {
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--light);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 60, 0.1), transparent);
+            transition: var(--transition);
+        }
+        
+        .action-btn:hover::before {
+            left: 100%;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 0, 60, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 60, 0.2);
+        }
+        
+        .action-btn i {
+            font-size: 1.8rem;
+            transition: var(--transition);
+        }
+        
+        .action-btn:hover i {
+            transform: scale(1.2);
+        }
+        
+        .action-btn span {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .action-btn.danger {
+            background: rgba(255, 0, 60, 0.1);
+            border-color: var(--danger);
+        }
+        
+        .action-btn.danger:hover {
+            background: rgba(255, 0, 60, 0.2);
+        }
+        
+        .action-btn.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-color: var(--warning);
+        }
+        
+        .action-btn.warning:hover {
+            background: rgba(255, 152, 0, 0.2);
+        }
+        
+        .action-btn.success {
+            background: rgba(0, 200, 83, 0.1);
+            border-color: var(--success);
+        }
+        
+        .action-btn.success:hover {
+            background: rgba(0, 200, 83, 0.2);
+        }
+        
+        .action-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        .action-btn.disabled:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border);
+            box-shadow: none;
+        }
+        
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: var(--radius);
+            background: rgba(255, 0, 60, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+        }
+        
+        .toggle-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 60, 0.2);
+        }
+        
+        /* ================= TRIGGERS PANEL ================= */
+        .triggers-container {
+            display: flex;
+            flex: 1;
+            gap: 25px;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .triggers-list {
+            flex: 0 0 350px;
+            background: rgba(21, 24, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .trigger-item {
+            padding: 18px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trigger-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 0, 60, 0.1);
+        }
+        
+        .trigger-item.selected {
+            background: rgba(255, 0, 60, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 0, 60, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .trigger-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .trigger-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius);
+            background: rgba(255, 0, 60, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.3rem;
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.2);
+        }
+        
+        .trigger-details h4 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--light);
+        }
+        
+        .trigger-details p {
+            color: #a0a0c0;
+            font-size: 0.85rem;
+        }
+        
+        .trigger-controls {
+            flex: 1;
+            background: rgba(21, 24, 35, 0.8);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .args-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            flex: 1;
+        }
+        
+        .args-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .arg-item {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .arg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .arg-type {
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(255, 0, 60, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .arg-input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--light);
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .arg-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 0, 60, 0.1);
+            outline: none;
+        }
+        
+        .btn-add-arg {
+            background: rgba(255, 0, 60, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 14px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+        }
+        
+        .btn-add-arg:hover {
+            background: rgba(255, 0, 60, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 60, 0.2);
+        }
+        
+        /* ================= ANIMATIONS ================= */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 1200px) {
+            .players-container,
+            .triggers-container {
+                flex-direction: column;
+            }
+            
+            .players-list,
+            .triggers-list {
+                flex: none;
+                max-height: 300px;
+                width: 100%;
+            }
+            
+            .action-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .sidebar-tabs {
+                width: 240px;
+            }
+            
+            .tab-btn {
+                padding: 18px 25px;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar-tabs {
+                width: 100%;
+                flex-direction: row;
+                padding: 15px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-x: auto;
+                gap: 10px;
+            }
+            
+            .tab-btn {
+                flex-direction: column;
+                padding: 15px;
+                min-width: 100px;
+                text-align: center;
+                gap: 10px;
+            }
+            
+            .tab-btn span {
+                font-size: 0.85rem;
+            }
+            
+            .tab-btn:hover {
+                transform: translateY(-5px);
+            }
+            
+            .tab-btn.active::after {
+                top: 10px;
+                right: 10px;
+            }
+            
+            .panels-container {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-right {
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 10px;
+            }
+            
+            .mode-switch {
+                width: 100%;
+            }
+            
+            .mode-btn {
+                min-width: 50%;
+                padding: 10px;
+            }
+            
+            .editor-actions,
+            .logs-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-primary,
+            .btn-secondary,
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .action-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+            
+            .players-list,
+            .triggers-list {
+                max-height: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .panel {
+                padding: 15px;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab-btn {
+                min-width: 80px;
+                padding: 12px;
+            }
+            
+            .tab-btn i {
+                font-size: 1rem;
+            }
+            
+            .tab-btn span {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Monaco Editor Overrides */
+        .monaco-editor {
+            border-radius: var(--radius);
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius);
+            border: 2px solid rgba(0, 0, 0, 0.2);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #b3002a 100%);
+        }
+        
+        /* Selection */
+        ::selection {
+            background: rgba(255, 0, 60, 0.3);
+            color: white;
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+    
+    <div class="app-container">
+        <!-- Login Screen -->
+        <div id="login">
+            <div class="login-container">
+                <div class="login-card">
+                    <div class="login-logo">
+                        <i class="fas fa-terminal"></i>
+                    </div>
+                    <h1 class="login-title">Averion Dashboard</h1>
+                    <p class="login-subtitle">v3.0 • Sistema de Controle Remoto</p>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-key"></i>
+                        <input type="password" id="key" class="input-field" placeholder="Digite sua chave de acesso" autocomplete="off">
+                    </div>
+                    
+                    <button class="btn" onclick="login()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Acessar Sistema
+                    </button>
+                    
+                    <div id="err" class="error-message"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Interface -->
+        <header>
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fas fa-terminal"></i>
+                    Averion
+                </div>
+                <div id="statusBadge" class="status-badge offline">
+                    <i class="fas fa-circle"></i>
+                    Offline
+                </div>
+                <div id="backdoorBadge" class="status-badge" style="background: rgba(255, 0, 60, 0.2); color: #ff003c; display: none;">
+                    <i class="fas fa-code"></i>
+                    Backdoor
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button class="btn-icon" onclick="connectExecutor()">
+                    <i class="fas fa-plug"></i>
+                    Conectar Executor
+                </button>
+                
+                <div class="mode-switch">
+                    <button class="mode-btn active" onclick="setMode('clientside')">Client</button>
+                    <button class="mode-btn" onclick="setMode('serverside')">Server</button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <!-- Sidebar Tabs -->
+            <div class="sidebar-tabs">
+                <button class="tab-btn active" onclick="tab('exec')">
+                    <i class="fas fa-code"></i>
+                    <span>Editor</span>
+                </button>
+                <button class="tab-btn" onclick="tab('players')">
+                    <i class="fas fa-users"></i>
+                    <span>Players</span>
+                </button>
+                <button class="tab-btn" onclick="tab('triggers')">
+                    <i class="fas fa-bolt"></i>
+                    <span>Triggers</span>
+                </button>
+                <button class="tab-btn" onclick="tab('logs')">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Logs</span>
+                </button>
+            </div>
+            
+            <!-- Panels Container -->
+            <div class="panels-container">
+                <!-- Editor Panel -->
+                <div id="exec" class="panel active">
+                    <div class="editor-header">
+                        <div class="editor-title">
+                            <i class="fas fa-edit"></i>
+                            Editor Lua
+                        </div>
+                        <div class="executor-info" id="executorInfo">
+                            Nenhum executor conectado
+                        </div>
+                    </div>
+                    
+                    <div id="editor-container">
+                        <!-- Monaco Editor will be loaded here -->
+                    </div>
+                    
+                    <div class="editor-actions">
+                        <button class="btn-primary" onclick="execute()">
+                            <i class="fas fa-play"></i>
+                            Executar Código
+                        </button>
+                        <button class="btn-secondary" onclick="clearEditor()">
+                            <i class="fas fa-eraser"></i>
+                            Limpar Editor
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Players Panel -->
+                <div id="players" class="panel">
+                    <div class="players-container">
+                        <div class="players-list">
+                            <div class="player-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="search-input" id="playerSearch" placeholder="Buscar jogador..." onkeyup="filterPlayers()">
+                            </div>
+                            <div id="playersList">
+                                <!-- Player list will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="player-actions">
+                            <div class="action-section">
+                                <div class="section-header">
+                                    <i class="fas fa-desktop"></i>
+                                    <h3>Ações ClientSide</h3>
+                                </div>
+                                <div id="clientActions" class="action-grid">
+                                    <!-- Client actions will be populated here -->
+                                </div>
+                            </div>
+                            
+                            <div class="action-section">
+                                <div class="section-header">
+                                    <i class="fas fa-server"></i>
+                                    <h3>Ações ServerSide</h3>
+                                </div>
+                                <div id="serverActions" class="action-grid">
+                                    <!-- Server actions will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Triggers Panel -->
+                <div id="triggers" class="panel">
+                    <div class="triggers-container">
+                        <div class="triggers-list">
+                            <div id="triggersList">
+                                <!-- Triggers list will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <div class="trigger-controls">
+                            <div id="selectedTriggerInfo">
+                                <!-- Selected trigger info will be shown here -->
+                            </div>
+                            
+                            <div class="args-container">
+                                <h4>Argumentos</h4>
+                                <div id="argsList" class="args-list">
+                                    <!-- Arguments will be added here -->
+                                </div>
+                                <button class="btn-add-arg" onclick="addArgument()">
+                                    <i class="fas fa-plus"></i>
+                                    Adicionar Argumento
+                                </button>
+                            </div>
+                            
+                            <button class="btn-primary" id="triggerBtn" onclick="fireTrigger()">
+                                <i class="fas fa-bolt"></i>
+                                Executar Trigger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logs Panel -->
+                <div id="logs" class="panel">
+                    <div class="logs-header">
+                        <div class="logs-title">
+                            <i class="fas fa-stream"></i>
+                            Logs do Sistema
+                        </div>
+                        <div class="logs-controls">
+                            <button class="btn-secondary" onclick="clearLogs()">
+                                <i class="fas fa-trash"></i>
+                                Limpar Logs
+                            </button>
+                            <button class="btn-secondary" onclick="exportLogs()">
+                                <i class="fas fa-download"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="logBox"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Particle.js Library -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <script>
+        /* ================= PARTICLE BACKGROUND ================= */
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: {
+                        value: 80,
+                        density: {
+                            enable: true,
+                            value_area: 800
+                        }
+                    },
+                    color: {
+                        value: "#ff003c"
+                    },
+                    shape: {
+                        type: "circle",
+                        stroke: {
+                            width: 0,
+                            color: "#000000"
+                        }
+                    },
+                    opacity: {
+                        value: 0.5,
+                        random: true,
+                        anim: {
+                            enable: true,
+                            speed: 1,
+                            opacity_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    size: {
+                        value: 3,
+                        random: true,
+                        anim: {
+                            enable: true,
+                            speed: 2,
+                            size_min: 0.1,
+                            sync: false
+                        }
+                    },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: "#ff003c",
+                        opacity: 0.2,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 1,
+                        direction: "none",
+                        random: true,
+                        straight: false,
+                        out_mode: "out",
+                        bounce: false,
+                        attract: {
+                            enable: false,
+                            rotateX: 600,
+                            rotateY: 1200
+                        }
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: {
+                            enable: true,
+                            mode: "repulse"
+                        },
+                        onclick: {
+                            enable: true,
+                            mode: "push"
+                        },
+                        resize: true
+                    },
+                    modes: {
+                        grab: {
+                            distance: 400,
+                            line_linked: {
+                                opacity: 1
+                            }
+                        },
+                        bubble: {
+                            distance: 400,
+                            size: 40,
+                            duration: 2,
+                            opacity: 8,
+                            speed: 3
+                        },
+                        repulse: {
+                            distance: 100,
+                            duration: 0.4
+                        },
+                        push: {
+                            particles_nb: 4
+                        },
+                        remove: {
+                            particles_nb: 2
+                        }
+                    }
+                },
+                retina_detect: true
+            });
+        });
+        
+        /* ================= FIREBASE ================= */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRIVl3JKnKia__tJGh04FSO80SClceLE4",
+            authDomain: "averiondashboard.firebaseapp.com",
+            databaseURL: "https://averiondashboard-default-rtdb.firebaseio.com",
+            projectId: "averiondashboard",
+            storageBucket: "averiondashboard.firebasestorage.app",
+            messagingSenderId: "774317269450",
+            appId: "1:774317269450:web:a84c6d91b00dac187aef33",
+            measurementId: "G-WMMVEZL0KP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        /* ================= STATE ================= */
+        let EXECUTOR_ID = null;
+        let MODE = "clientside";
+        let CHALLENGE = null;
+        let editor = null;
+        let logs = [];
+        let selectedPlayer = null;
+        let selectedTrigger = null;
+        let activeToggles = {
+            view: false,
+            loopTp: false,
+            bringAll: false,
+            fling: false
+        };
+        let backdoorDetected = false;
+        
+        /* ================= CHALLENGE ================= */
+        db.ref("auth/challenge").once("value", s => {
+            CHALLENGE = s.val();
+            log("Sistema de autenticação carregado", "info");
+        });
+        
+        /* ================= LOGIN ================= */
+        async function login() {
+            const key = document.getElementById('key').value.trim();
+            const err = document.getElementById('err');
+            
+            if (!key) {
+                err.innerHTML = '<i class="fas fa-exclamation-circle"></i> Digite uma chave de acesso';
+                return;
+            }
+            
+            if (!CHALLENGE) {
+                err.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro ao carregar sistema de autenticação';
+                return;
+            }
+            
+            try {
+                const hash = await sha256(key + CHALLENGE);
+                db.ref("auth/hashes/" + hash).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        // Login successful
+                        document.getElementById('login').style.opacity = '0';
+                        setTimeout(() => {
+                            document.getElementById('login').style.display = 'none';
+                        }, 500);
+                        
+                        document.getElementById('statusBadge').className = 'status-badge online';
+                        document.getElementById('statusBadge').innerHTML = '<i class="fas fa-circle"></i> Online';
+                        log("Autenticado com sucesso", "success");
+                        initializeMonaco();
+                    } else {
+                        err.innerHTML = '<i class="fas fa-times-circle"></i> Chave de acesso inválida';
+                    }
+                });
+            } catch (error) {
+                err.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erro durante a autenticação';
+                console.error('Login error:', error);
+            }
+        }
+        
+        async function sha256(message) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Allow login with Enter key
+        document.getElementById('key').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        
+        /* ================= MONACO EDITOR ================= */
+        function initializeMonaco() {
+            require.config({ paths: { vs: 'vs' } });
+            require(["vs/editor/editor.main"], () => {
+                editor = monaco.editor.create(document.getElementById('editor-container'), {
+                    value: `-- Averion Dashboard v3.0\n-- Sistema de execução remota\n\nprint("Bem-vindo ao Averion!")\n\n-- Exemplo de código\nlocal player = game.Players.LocalPlayer\nif player then\n    print("Player:", player.Name)\nend`,
+                    language: "lua",
+                    theme: "vs-dark",
+                    automaticLayout: true,
+                    fontSize: 14,
+                    fontFamily: "'Cascadia Code', 'Consolas', monospace",
+                    minimap: {
+                        enabled: true
+                    },
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on",
+                    lineNumbers: "on",
+                    roundedSelection: false,
+                    scrollbar: {
+                        vertical: "visible",
+                        horizontal: "visible"
+                    }
+                });
+                
+                // Force a layout update
+                setTimeout(() => {
+                    editor.layout();
+                }, 100);
+                
+                log("Editor Lua inicializado", "success");
+            });
+        }
+        
+        /* ================= EXECUTOR CONNECTION ================= */
+        function connectExecutor() {
+            const id = prompt("Executor ID:");
+            if (!id) return;
+            
+            db.ref(`executors/${id}/status`).once("value", snap => {
+                if (!snap.exists()) {
+                    log("Executor offline ou inexistente", "error");
+                    return;
+                }
+                
+                const data = snap.val();
+                if (Date.now()/1000 - data.ts > 15) {
+                    log("Executor expirado", "warning");
+                    return;
+                }
+                
+                EXECUTOR_ID = id;
+                document.getElementById('executorInfo').textContent = `Conectado: ${id}`;
+                log(`Conectado ao executor ${id}`, "success");
+                
+                // Initialize listeners
+                listenLogs();
+                listenPlayers();
+                listenTriggers();
+                
+                // Check backdoor status
+                checkBackdoorStatus();
+            });
+        }
+        
+        /* ================= PLAYERS MANAGEMENT ================= */
+        function listenPlayers() {
+            if (!EXECUTOR_ID) return;
+            
+            db.ref(`executors/${EXECUTOR_ID}/players`).on("value", snapshot => {
+                const players = snapshot.val() || {};
+                renderPlayersList(players);
+            });
+        }
+        
+        function renderPlayersList(players) {
+            const playersList = document.getElementById('playersList');
+            playersList.innerHTML = '';
+            
+            Object.values(players).forEach(player => {
+                const playerElement = document.createElement('div');
+                playerElement.className = 'player-item';
+                playerElement.dataset.userId = player.UserId;
+                
+                // Get initials for avatar
+                const initials = player.Name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                
+                playerElement.innerHTML = `
+                    <div class="player-info">
+                        <div class="player-avatar">${initials}</div>
+                        <div class="player-details">
+                            <h4>${player.DisplayName || player.Name}</h4>
+                            <p>${player.Name} • ID: ${player.UserId}</p>
+                        </div>
+                    </div>
+                    <div class="player-stats">
+                        <span>Idade: ${player.AccountAge}d</span>
+                        <span>Online</span>
+                    </div>
+                `;
+                
+                playerElement.onclick = () => selectPlayer(player);
+                playersList.appendChild(playerElement);
+            });
+            
+            // Initialize actions
+            initializePlayerActions();
+        }
+        
+        function selectPlayer(player) {
+            selectedPlayer = player;
+            
+            // Remove previous selection
+            document.querySelectorAll('.player-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.currentTarget.classList.add('selected');
+            
+            // Update action buttons
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                if (btn.id !== 'bringAllBtn') {
+                    btn.classList.remove('disabled');
+                }
+            });
+            
+            log(`Jogador selecionado: ${player.Name} (ID: ${player.UserId})`, "info");
+        }
+        
+        function filterPlayers() {
+            const search = document.getElementById('playerSearch').value.toLowerCase();
+            const players = document.querySelectorAll('.player-item');
+            
+            players.forEach(player => {
+                const name = player.querySelector('h4').textContent.toLowerCase();
+                const details = player.querySelector('p').textContent.toLowerCase();
+                
+                if (name.includes(search) || details.includes(search)) {
+                    player.style.display = 'block';
+                } else {
+                    player.style.display = 'none';
+                }
+            });
+        }
+        
+        function initializePlayerActions() {
+            const clientActions = document.getElementById('clientActions');
+            const serverActions = document.getElementById('serverActions');
+            
+            // Client Actions
+            clientActions.innerHTML = `
+                <div class="action-btn" onclick="sendAction('tp')">
+                    <i class="fas fa-location-arrow"></i>
+                    <span>TP</span>
+                </div>
+                <div class="action-btn toggle-btn ${activeToggles.view ? 'active' : ''}" id="viewBtn" onclick="toggleAction('view')">
+                    <i class="fas fa-eye"></i>
+                    <span>VIEW ${activeToggles.view ? 'ON' : 'OFF'}</span>
+                </div>
+                <div class="action-btn toggle-btn ${activeToggles.loopTp ? 'active' : ''}" id="loopTpBtn" onclick="toggleAction('loopTp')">
+                    <i class="fas fa-sync"></i>
+                    <span>LOOP TP ${activeToggles.loopTp ? 'ON' : 'OFF'}</span>
+                </div>
+                <div class="action-btn" onclick="sendAction('pull')">
+                    <i class="fas fa-hand-paper"></i>
+                    <span>Puxar</span>
+                </div>
+                <div class="action-btn toggle-btn ${activeToggles.bringAll ? 'active' : ''}" id="bringAllBtn" onclick="toggleAction('bringAll')">
+                    <i class="fas fa-users"></i>
+                    <span>Bring All ${activeToggles.bringAll ? 'ON' : 'OFF'}</span>
+                </div>
+                <div class="action-btn toggle-btn ${activeToggles.fling ? 'active' : ''}" id="flingBtn" onclick="toggleAction('fling')">
+                    <i class="fas fa-wind"></i>
+                    <span>Fling ${activeToggles.fling ? 'ON' : 'OFF'}</span>
+                </div>
+                <div class="action-btn" onclick="sendAction('bang')">
+                    <i class="fas fa-fire"></i>
+                    <span>Bang</span>
+                </div>
+            `;
+            
+            // Server Actions (initially disabled until backdoor check)
+            serverActions.innerHTML = `
+                <div class="action-btn disabled" id="killBtn">
+                    <i class="fas fa-skull-crossbones"></i>
+                    <span>Kill</span>
+                </div>
+                <div class="action-btn disabled" id="bringFEBtn">
+                    <i class="fas fa-magnet"></i>
+                    <span>Bring (FE)</span>
+                </div>
+                <div class="action-btn disabled" id="banBtn">
+                    <i class="fas fa-ban"></i>
+                    <span>Ban</span>
+                </div>
+                <div class="action-btn disabled" id="kickBtn">
+                    <i class="fas fa-door-open"></i>
+                    <span>Kick</span>
+                </div>
+                <div class="action-btn disabled" id="respawnBtn">
+                    <i class="fas fa-redo"></i>
+                    <span>Respawn</span>
+                </div>
+                <div class="action-btn disabled" id="jailBtn">
+                    <i class="fas fa-gavel"></i>
+                    <span>Jail</span>
+                </div>
+            `;
+            
+            // Check for backdoor to enable server actions
+            if (backdoorDetected) {
+                enableServerActions();
+            }
+        }
+        
+        function enableServerActions() {
+            document.querySelectorAll('#serverActions .action-btn').forEach(btn => {
+                btn.classList.remove('disabled');
+                btn.onclick = function() {
+                    const action = this.querySelector('span').textContent.toLowerCase().split(' ')[0];
+                    sendAction(action);
+                };
+            });
+        }
+        
+        function toggleAction(action) {
+            const btn = document.getElementById(`${action}Btn`);
+            activeToggles[action] = !activeToggles[action];
+            
+            btn.classList.toggle('active');
+            btn.querySelector('span').textContent = 
+                `${action.toUpperCase().replace(/_/g, ' ')} ${activeToggles[action] ? 'ON' : 'OFF'}`;
+            
+            sendAction(action, activeToggles[action] ? 'start' : 'stop');
+        }
+        
+        function sendAction(action, state = 'start') {
+            if (!selectedPlayer && action !== 'bringAll') {
+                log("Selecione um jogador primeiro", "warning");
+                return;
+            }
+            
+            if (!EXECUTOR_ID) {
+                log("Conecte-se a um executor primeiro", "error");
+                return;
+            }
+            
+            const playerName = selectedPlayer ? selectedPlayer.Name : '';
+            const isServerAction = ['kill', 'bringFE', 'ban', 'kick', 'respawn', 'jail'].includes(action);
+            
+            const command = {
+                type: 'command',
+                action: action,
+                target: playerName,
+                state: state,
+                timestamp: Date.now(),
+                mode: isServerAction ? 'serverside' : 'clientside'
+            };
+            
+            sendCommand(command);
+            log(`Comando ${action} ${state} enviado para ${playerName || 'todos'}`, "exec");
+        }
+        
+        function checkBackdoorStatus() {
+            if (!EXECUTOR_ID) return;
+            
+            // Send command to check backdoor
+            const command = {
+                type: 'special',
+                action: 'checkBackdoor',
+                timestamp: Date.now()
+            };
+            
+            sendCommand(command, true);
+            
+            // Listen for backdoor result
+            db.ref(`executors/${EXECUTOR_ID}/backdoor`).once("value", snapshot => {
+                const result = snapshot.val();
+                if (result && result.hasBackdoor) {
+                    backdoorDetected = true;
+                    document.getElementById('backdoorBadge').style.display = 'flex';
+                    enableServerActions();
+                    log("Backdoor detectado - Ações ServerSide habilitadas", "warning");
+                } else {
+                    log("Backdoor não detectado - Ações ServerSide desabilitadas", "info");
+                }
+            });
+        }
+        
+        /* ================= TRIGGERS MANAGEMENT ================= */
+        function listenTriggers() {
+            if (!EXECUTOR_ID) return;
+            
+            // Request triggers from client
+            const command = {
+                type: 'special',
+                action: 'getTriggers',
+                timestamp: Date.now()
+            };
+            
+            sendCommand(command, true);
+            
+            // Listen for triggers response
+            db.ref(`executors/${EXECUTOR_ID}/triggers`).on("value", snapshot => {
+                const triggers = snapshot.val();
+                if (triggers) {
+                    renderTriggersList(triggers);
+                }
+            });
+        }
+        
+        function renderTriggersList(triggers) {
+            const triggersList = document.getElementById('triggersList');
+            triggersList.innerHTML = '';
+            
+            triggers.forEach(trigger => {
+                const triggerElement = document.createElement('div');
+                triggerElement.className = 'trigger-item';
+                triggerElement.dataset.fullPath = trigger.FullPath;
+                triggerElement.dataset.className = trigger.ClassName;
+                
+                triggerElement.innerHTML = `
+                    <div class="trigger-info">
+                        <div class="trigger-icon">
+                            <i class="fas ${trigger.ClassName === 'RemoteEvent' ? 'fa-bolt' : 'fa-code'}"></i>
+                        </div>
+                        <div class="trigger-details">
+                            <h4>${trigger.Name}</h4>
+                            <p>${trigger.ClassName} • ${trigger.Parent}</p>
+                        </div>
+                    </div>
+                `;
+                
+                triggerElement.onclick = () => selectTrigger(trigger);
+                triggersList.appendChild(triggerElement);
+            });
+            
+            log(`${triggers.length} triggers encontrados`, "info");
+        }
+        
+        function selectTrigger(trigger) {
+            selectedTrigger = trigger;
+            
+            // Remove previous selection
+            document.querySelectorAll('.trigger-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            event.currentTarget.classList.add('selected');
+            
+            // Update trigger info
+            const triggerInfo = document.getElementById('selectedTriggerInfo');
+            triggerInfo.innerHTML = `
+                <h3>${trigger.Name}</h3>
+                <p><strong>Tipo:</strong> ${trigger.ClassName}</p>
+                <p><strong>Caminho:</strong> ${trigger.FullPath}</p>
+                <p><strong>Parent:</strong> ${trigger.Parent}</p>
+            `;
+            
+            // Clear arguments
+            document.getElementById('argsList').innerHTML = '';
+            
+            log(`Trigger selecionado: ${trigger.Name}`, "info");
+        }
+        
+        function addArgument() {
+            if (!selectedTrigger) {
+                log("Selecione um trigger primeiro", "warning");
+                return;
+            }
+            
+            const argsList = document.getElementById('argsList');
+            const argId = Date.now();
+            
+            const argElement = document.createElement('div');
+            argElement.className = 'arg-item';
+            argElement.innerHTML = `
+                <div class="arg-header">
+                    <span>Argumento ${argsList.children.length + 1}</span>
+                    <span class="arg-type">String</span>
+                </div>
+                <input type="text" class="arg-input" id="arg_${argId}" placeholder="Valor do argumento">
+            `;
+            
+            argsList.appendChild(argElement);
+        }
+        
+        function fireTrigger() {
+            if (!selectedTrigger) {
+                log("Selecione um trigger primeiro", "warning");
+                return;
+            }
+            
+            if (!EXECUTOR_ID) {
+                log("Conecte-se a um executor primeiro", "error");
+                return;
+            }
+            
+            // Collect arguments
+            const args = [];
+            document.querySelectorAll('.arg-input').forEach(input => {
+                if (input.value.trim()) {
+                    args.push(input.value);
+                }
+            });
+            
+            // Create trigger code
+            let code = `-- Fire trigger ${selectedTrigger.Name}
+local path = "${selectedTrigger.FullPath}"
+local parts = string.split(path, ".")
+local obj = game
 
-  <h1>🔥 Averion Dashboard</h1>
+for i = 1, #parts do
+    obj = obj:FindFirstChild(parts[i])
+    if not obj then
+        print("Trigger não encontrado: " .. parts[i])
+        return
+    end
+end
 
-  <div class="section">
-    <h2>🧑‍🤝‍🧑 Players</h2>
-    <input type="text" id="target" placeholder="Nome do player">
-    <br>
-    <button onclick="sendCmd('kick')">Kick</button>
-    <button onclick="sendCmd('kill')">Kill</button>
-  </div>
-
-  <div class="section">
-    <h2>💻 Executor</h2>
-    <textarea id="code" rows="6" placeholder="Código FE..."></textarea>
-    <br>
-    <button onclick="sendCmd('exec')">Executar</button>
-  </div>
-
-  <script>
-    const firebaseURL = "https://averiondashboard-default-rtdb.firebaseio.com/commands.json"; // Troca pela tua URL Firebase
-
-    function sendCmd(action) {
-      const target = document.getElementById("target").value;
-      const code = document.getElementById("code").value;
-
-      const payload = {
-        action: action,
-        target: target,
-        code: code
-      };
-
-      fetch(firebaseURL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).then(() => alert("✅ Comando enviado!"));
-    }
-  </script>
-
+if obj:IsA("RemoteEvent") then`;
+            
+            if (args.length > 0) {
+                code += `
+    obj:FireServer(${args.map(arg => `"${arg}"`).join(', ')})
+    print("Trigger ${selectedTrigger.Name} executado com ${args.length} argumentos")`;
+            } else {
+                code += `
+    obj:FireServer()
+    print("Trigger ${selectedTrigger.Name} executado sem argumentos")`;
+            }
+            
+            code += `
+elseif obj:IsA("RemoteFunction") then`;
+            
+            if (args.length > 0) {
+                code += `
+    local result = obj:InvokeServer(${args.map(arg => `"${arg}"`).join(', ')})
+    print("RemoteFunction ${selectedTrigger.Name} invocado. Resultado: ", result)`;
+            } else {
+                code += `
+    local result = obj:InvokeServer()
+    print("RemoteFunction ${selectedTrigger.Name} invocado. Resultado: ", result)`;
+            }
+            
+            code += `
+else
+    print("Objeto não é um RemoteEvent ou RemoteFunction")
+end`;
+            
+            // For triggers, we still send code
+            const command = {
+                type: 'code',
+                code: code,
+                mode: 'clientside',
+                timestamp: Date.now()
+            };
+            
+            sendCommand(command);
+            log(`Trigger ${selectedTrigger.Name} executado com ${args.length} argumentos`, "exec");
+        }
+        
+        /* ================= COMMAND EXECUTION ================= */
+        function execute() {
+            if (!EXECUTOR_ID) {
+                log("Nenhum executor conectado", "error");
+                alert("Conecte-se a um executor primeiro!");
+                return;
+            }
+            
+            if (!editor) {
+                log("Editor não inicializado", "error");
+                return;
+            }
+            
+            const code = editor.getValue();
+            if (!code.trim()) {
+                log("Código vazio", "warning");
+                return;
+            }
+            
+            const command = {
+                type: 'code',
+                code: code,
+                mode: MODE,
+                timestamp: Date.now()
+            };
+            
+            sendCommand(command);
+            log(`Código personalizado enviado para execução (${MODE})`, "exec");
+        }
+        
+        function sendCommand(command, isSpecial = false) {
+            if (!EXECUTOR_ID) return;
+            
+            const commandRef = db.ref(`executors/${EXECUTOR_ID}/commands`).push();
+            commandRef.set(command);
+            
+            if (!isSpecial) {
+                db.ref("stats/executions").transaction(n => (n || 0) + 1);
+            }
+        }
+        
+        /* ================= LOGS ================= */
+        function listenLogs() {
+            if (!EXECUTOR_ID) return;
+            
+            db.ref(`executors/${EXECUTOR_ID}/logs`).limitToLast(20).on("child_added", snapshot => {
+                const logData = snapshot.val();
+                log(logData.msg, logData.type);
+            });
+        }
+        
+        function log(message, type = "info") {
+            const logBox = document.getElementById('logBox');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `
+                <div class="log-time">${timestamp}</div>
+                <div class="log-content">
+                    <span class="log-type">${type.toUpperCase()}</span>
+                    <span class="log-message">${message}</span>
+                </div>
+            `;
+            
+            logBox.prepend(logEntry);
+            logs.unshift({ time: timestamp, type, message });
+            
+            // Keep only last 50 logs in memory
+            if (logs.length > 50) {
+                logs.pop();
+            }
+            
+            // Auto-scroll to top
+            logBox.scrollTop = 0;
+        }
+        
+        function clearLogs() {
+            if (confirm("Tem certeza que deseja limpar todos os logs?")) {
+                document.getElementById('logBox').innerHTML = '';
+                logs = [];
+                log("Logs limpos", "info");
+            }
+        }
+        
+        function exportLogs() {
+            if (logs.length === 0) {
+                alert("Não há logs para exportar");
+                return;
+            }
+            
+            const content = logs.map(log => 
+                `[${log.time}] [${log.type.toUpperCase()}] ${log.message}`
+            ).join('\n');
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `averion-logs-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            log("Logs exportados", "success");
+        }
+        
+        /* ================= UI FUNCTIONS ================= */
+        function tab(tabName) {
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Show selected panel
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            // If switching to editor tab, force Monaco layout update
+            if (tabName === 'exec' && editor) {
+                setTimeout(() => {
+                    editor.layout();
+                }, 100);
+            }
+        }
+        
+        function setMode(mode) {
+            MODE = mode;
+            
+            // Update UI
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            log(`Modo alterado para: ${mode}`, "info");
+        }
+        
+        function clearEditor() {
+            if (editor && confirm("Tem certeza que deseja limpar o editor?")) {
+                editor.setValue("");
+                log("Editor limpo", "info");
+            }
+        }
+        
+        /* ================= INITIALIZATION ================= */
+        window.addEventListener('DOMContentLoaded', () => {
+            log("Dashboard inicializado", "info");
+            
+            // Focus on key input
+            document.getElementById('key').focus();
+            
+            // Handle keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+Enter to execute code (in editor tab)
+                if (e.ctrlKey && e.key === 'Enter' && 
+                    document.getElementById('exec').classList.contains('active')) {
+                    e.preventDefault();
+                    execute();
+                }
+                
+                // Ctrl+L to clear logs (in logs tab)
+                if (e.ctrlKey && e.key === 'l' && 
+                    document.getElementById('logs').classList.contains('active')) {
+                    e.preventDefault();
+                    clearLogs();
+                }
+                
+                // Ctrl+E to clear editor (in editor tab)
+                if (e.ctrlKey && e.key === 'e' && 
+                    document.getElementById('exec').classList.contains('active')) {
+                    e.preventDefault();
+                    clearEditor();
+                }
+                
+                // Ctrl+F to search players (in players tab)
+                if (e.ctrlKey && e.key === 'f' && 
+                    document.getElementById('players').classList.contains('active')) {
+                    e.preventDefault();
+                    document.getElementById('playerSearch').focus();
+                }
+                
+                // Tab switching with Ctrl+Number
+                if (e.ctrlKey && e.key >= '1' && e.key <= '4') {
+                    e.preventDefault();
+                    const tabs = ['exec', 'players', 'triggers', 'logs'];
+                    const index = parseInt(e.key) - 1;
+                    if (index < tabs.length) {
+                        // Simulate clicking the tab
+                        const tabButtons = document.querySelectorAll('.tab-btn');
+                        if (tabButtons[index]) {
+                            tabButtons[index].click();
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
