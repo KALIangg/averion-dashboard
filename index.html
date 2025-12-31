@@ -2102,13 +2102,377 @@
         let logs = [];
         let selectedPlayer = null;
         let selectedTrigger = null;
-        let activeToggles = {
-            view: false,
-            loopTp: false,
-            bringAll: false,
-            fling: false
-        };
         let backdoorDetected = false;
+        
+        /* ================= CONFIGURAÇÃO PADRÃO DOS BOTÕES ================= */
+        
+        // Configuração centralizada dos botões
+        const ACTIONS_CONFIG = {
+            // Ações ClientSide
+            clientside: [
+                {
+                    id: 'tp',
+                    name: 'TP',
+                    icon: 'fa-location-arrow',
+                    type: 'normal',
+                    category: 'teleport',
+                    tooltip: 'Teleportar para o jogador selecionado'
+                },
+                {
+                    id: 'view',
+                    name: 'VIEW',
+                    icon: 'fa-eye',
+                    type: 'toggle',
+                    category: 'view',
+                    tooltip: 'Alternar visualização do jogador',
+                    defaultState: false
+                },
+                {
+                    id: 'loopTp',
+                    name: 'LOOP TP',
+                    icon: 'fa-sync',
+                    type: 'toggle',
+                    category: 'teleport',
+                    tooltip: 'Teleporte contínuo para o jogador',
+                    defaultState: false
+                },
+                {
+                    id: 'pull',
+                    name: 'Puxar',
+                    icon: 'fa-hand-paper',
+                    type: 'normal',
+                    category: 'movement',
+                    tooltip: 'Puxar o jogador para sua posição'
+                },
+                {
+                    id: 'bringAll',
+                    name: 'Bring All',
+                    icon: 'fa-users',
+                    type: 'toggle',
+                    category: 'teleport',
+                    tooltip: 'Trazer todos os jogadores para você',
+                    defaultState: false,
+                    requiresAllPlayers: true
+                },
+                {
+                    id: 'fling',
+                    name: 'Fling',
+                    icon: 'fa-wind',
+                    type: 'toggle',
+                    category: 'fun',
+                    tooltip: 'Jogar o jogador para longe',
+                    defaultState: false
+                },
+                {
+                    id: 'bang',
+                    name: 'Bang',
+                    icon: 'fa-fire',
+                    type: 'normal',
+                    category: 'fun',
+                    tooltip: 'Explodir o jogador'
+                },
+                {
+                    id: 'esp',
+                    name: 'ESP',
+                    icon: 'fa-eye-low-vision',
+                    type: 'toggle',
+                    category: 'visual',
+                    tooltip: 'Ativar ESP (Wallhack)',
+                    defaultState: false
+                },
+                {
+                    id: 'noclip',
+                    name: 'NoClip',
+                    icon: 'fa-walking',
+                    type: 'toggle',
+                    category: 'movement',
+                    tooltip: 'Ativar modo NoClip',
+                    defaultState: false
+                },
+                {
+                    id: 'speed',
+                    name: 'Speed',
+                    icon: 'fa-tachometer-alt',
+                    type: 'toggle',
+                    category: 'movement',
+                    tooltip: 'Aumentar velocidade',
+                    defaultState: false
+                },
+                {
+                    id: 'fly',
+                    name: 'Fly',
+                    icon: 'fa-feather-alt',
+                    type: 'toggle',
+                    category: 'movement',
+                    tooltip: 'Ativar modo de voo',
+                    defaultState: false
+                }
+            ],
+            
+            // Ações ServerSide (requer backdoor)
+            serverside: [
+                {
+                    id: 'kill',
+                    name: 'Kill',
+                    icon: 'fa-skull-crossbones',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Matar o jogador',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'bringFE',
+                    name: 'Bring (FE)',
+                    icon: 'fa-magnet',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Trazer jogador (FE Bypass)',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'ban',
+                    name: 'Ban',
+                    icon: 'fa-ban',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Banir jogador do jogo',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'kick',
+                    name: 'Kick',
+                    icon: 'fa-door-open',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Expulsar jogador do jogo',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'respawn',
+                    name: 'Respawn',
+                    icon: 'fa-redo',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Ressuscitar jogador',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'jail',
+                    name: 'Jail',
+                    icon: 'fa-gavel',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Prender jogador',
+                    requiresBackdoor: true
+                },
+                {
+                    id: 'freeze',
+                    name: 'Freeze',
+                    icon: 'fa-snowflake',
+                    type: 'toggle',
+                    category: 'admin',
+                    tooltip: 'Congelar jogador',
+                    requiresBackdoor: true,
+                    defaultState: false
+                },
+                {
+                    id: 'god',
+                    name: 'God Mode',
+                    icon: 'fa-shield-alt',
+                    type: 'toggle',
+                    category: 'admin',
+                    tooltip: 'Ativar modo Deus',
+                    requiresBackdoor: true,
+                    defaultState: false
+                },
+                {
+                    id: 'invisible',
+                    name: 'Invisível',
+                    icon: 'fa-eye-slash',
+                    type: 'toggle',
+                    category: 'admin',
+                    tooltip: 'Tornar jogador invisível',
+                    requiresBackdoor: true,
+                    defaultState: false
+                },
+                {
+                    id: 'tpToMe',
+                    name: 'TP To Me',
+                    icon: 'fa-user-plus',
+                    type: 'normal',
+                    category: 'admin',
+                    tooltip: 'Teleportar jogador para você',
+                    requiresBackdoor: true
+                }
+            ]
+        };
+        
+        // Estados dos toggles
+        let activeToggles = {};
+        
+        // Inicializar estados dos toggles
+        function initializeToggles() {
+            // Inicializar todos os toggles como false
+            ACTIONS_CONFIG.clientside.forEach(action => {
+                if (action.type === 'toggle') {
+                    activeToggles[action.id] = action.defaultState || false;
+                }
+            });
+            
+            ACTIONS_CONFIG.serverside.forEach(action => {
+                if (action.type === 'toggle') {
+                    activeToggles[action.id] = action.defaultState || false;
+                }
+            });
+        }
+        
+        /* ================= SISTEMA DE CRIAÇÃO DE BOTÕES ================= */
+        
+        // Função principal para criar botões
+        function createActionButton(action, mode) {
+            const button = document.createElement('div');
+            
+            // Determinar classe CSS baseada no tipo
+            let buttonClass = 'action-btn';
+            if (action.type === 'toggle') {
+                buttonClass += ' toggle-btn';
+                if (activeToggles[action.id]) {
+                    buttonClass += ' active';
+                }
+            }
+            
+            // Adicionar classe de categoria para estilização
+            if (action.category) {
+                buttonClass += ` ${action.category}`;
+            }
+            
+            button.className = buttonClass;
+            button.id = `${action.id}Btn`;
+            
+            // Verificar se o botão deve estar desabilitado
+            const isDisabled = checkButtonDisabled(action, mode);
+            if (isDisabled) {
+                button.classList.add('disabled');
+            }
+            
+            // Criar conteúdo HTML do botão
+            button.innerHTML = `
+                <i class="fas ${action.icon}"></i>
+                <span>${action.name} ${action.type === 'toggle' ? (activeToggles[action.id] ? 'ON' : 'OFF') : ''}</span>
+            `;
+            
+            // Adicionar tooltip se existir
+            if (action.tooltip) {
+                button.title = action.tooltip;
+            }
+            
+            // Adicionar evento de clique
+            if (!isDisabled) {
+                button.onclick = () => handleActionClick(action, mode);
+            }
+            
+            return button;
+        }
+        
+        // Verificar se botão deve estar desabilitado
+        function checkButtonDisabled(action, mode) {
+            // Se for ação ServerSide e não tiver backdoor
+            if (mode === 'serverside' && action.requiresBackdoor && !backdoorDetected) {
+                return true;
+            }
+            
+            // Se não tiver jogador selecionado (exceto ações que não precisam)
+            if (!selectedPlayer && !action.requiresAllPlayers) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // Manipular clique no botão
+        function handleActionClick(action, mode) {
+            if (!EXECUTOR_ID) {
+                log("Conecte-se a um executor primeiro", "error");
+                return;
+            }
+            
+            if (!selectedPlayer && !action.requiresAllPlayers) {
+                log("Selecione um jogador primeiro", "warning");
+                return;
+            }
+            
+            const playerName = selectedPlayer ? selectedPlayer.Name : 'ALL';
+            
+            if (action.type === 'toggle') {
+                // Alternar estado do toggle
+                activeToggles[action.id] = !activeToggles[action.id];
+                
+                // Atualizar botão
+                const button = document.getElementById(`${action.id}Btn`);
+                button.classList.toggle('active');
+                button.querySelector('span').textContent = 
+                    `${action.name} ${activeToggles[action.id] ? 'ON' : 'OFF'}`;
+                
+                // Enviar comando
+                sendActionCommand(action.id, activeToggles[action.id] ? 'start' : 'stop', mode);
+                log(`Toggle ${action.name} ${activeToggles[action.id] ? 'ativado' : 'desativado'} para ${playerName}`, "exec");
+                
+            } else {
+                // Ação normal (single click)
+                sendActionCommand(action.id, 'execute', mode);
+                log(`Ação ${action.name} executada para ${playerName}`, "exec");
+            }
+        }
+        
+        // Enviar comando de ação
+        function sendActionCommand(action, state, mode) {
+            const playerName = selectedPlayer ? selectedPlayer.Name : 'ALL';
+            
+            const command = {
+                type: 'command',
+                action: action,
+                target: playerName,
+                state: state,
+                timestamp: Date.now(),
+                mode: mode
+            };
+            
+            sendCommand(command);
+        }
+        
+        // Renderizar todas as ações
+        function renderAllActions() {
+            renderActions('clientside', 'clientActions');
+            renderActions('serverside', 'serverActions');
+        }
+        
+        // Renderizar ações específicas
+        function renderActions(mode, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            const actions = ACTIONS_CONFIG[mode];
+            
+            actions.forEach(action => {
+                const button = createActionButton(action, mode);
+                container.appendChild(button);
+            });
+        }
+        
+        // Atualizar estado dos botões (chamar quando jogador for selecionado)
+        function updateButtonsState() {
+            renderAllActions();
+        }
+        
+        // Habilitar ações ServerSide quando backdoor for detectado
+        function enableServerSideActions() {
+            backdoorDetected = true;
+            document.getElementById('backdoorBadge').style.display = 'flex';
+            renderAllActions();
+            log("Backdoor detectado - Ações ServerSide habilitadas", "warning");
+        }
         
         /* ================= SCRIPT TABS SYSTEM ================= */
         let scripts = [];
@@ -2387,7 +2751,9 @@
                         document.getElementById('statusBadge').innerHTML = '<i class="fas fa-circle"></i> Online';
                         log("Autenticado com sucesso", "success");
                         
-                        // Initialize Monaco and load scripts
+                        // Initialize systems
+                        initializeToggles();
+                        renderAllActions();
                         initializeMonaco();
                         loadScripts();
                     } else {
@@ -2549,9 +2915,6 @@
                 playerElement.onclick = () => selectPlayer(player);
                 playersList.appendChild(playerElement);
             });
-            
-            // Initialize actions
-            initializePlayerActions();
         }
         
         function selectPlayer(player) {
@@ -2566,11 +2929,7 @@
             event.currentTarget.classList.add('selected');
             
             // Update action buttons
-            document.querySelectorAll('.action-btn').forEach(btn => {
-                if (btn.id !== 'bringAllBtn') {
-                    btn.classList.remove('disabled');
-                }
-            });
+            updateButtonsState();
             
             log(`Jogador selecionado: ${player.Name} (ID: ${player.UserId})`, "info");
         }
@@ -2591,124 +2950,6 @@
             });
         }
         
-        function initializePlayerActions() {
-            const clientActions = document.getElementById('clientActions');
-            const serverActions = document.getElementById('serverActions');
-            
-            // Client Actions
-            clientActions.innerHTML = `
-                <div class="action-btn" onclick="sendAction('tp')">
-                    <i class="fas fa-location-arrow"></i>
-                    <span>TP</span>
-                </div>
-                <div class="action-btn toggle-btn ${activeToggles.view ? 'active' : ''}" id="viewBtn" onclick="toggleAction('view')">
-                    <i class="fas fa-eye"></i>
-                    <span>VIEW ${activeToggles.view ? 'ON' : 'OFF'}</span>
-                </div>
-                <div class="action-btn toggle-btn ${activeToggles.loopTp ? 'active' : ''}" id="loopTpBtn" onclick="toggleAction('loopTp')">
-                    <i class="fas fa-sync"></i>
-                    <span>LOOP TP ${activeToggles.loopTp ? 'ON' : 'OFF'}</span>
-                </div>
-                <div class="action-btn" onclick="sendAction('pull')">
-                    <i class="fas fa-hand-paper"></i>
-                    <span>Puxar</span>
-                </div>
-                <div class="action-btn toggle-btn ${activeToggles.bringAll ? 'active' : ''}" id="bringAllBtn" onclick="toggleAction('bringAll')">
-                    <i class="fas fa-users"></i>
-                    <span>Bring All ${activeToggles.bringAll ? 'ON' : 'OFF'}</span>
-                </div>
-                <div class="action-btn toggle-btn ${activeToggles.fling ? 'active' : ''}" id="flingBtn" onclick="toggleAction('fling')">
-                    <i class="fas fa-wind"></i>
-                    <span>Fling ${activeToggles.fling ? 'ON' : 'OFF'}</span>
-                </div>
-                <div class="action-btn" onclick="sendAction('bang')">
-                    <i class="fas fa-fire"></i>
-                    <span>Bang</span>
-                </div>
-            `;
-            
-            // Server Actions (initially disabled until backdoor check)
-            serverActions.innerHTML = `
-                <div class="action-btn disabled" id="killBtn">
-                    <i class="fas fa-skull-crossbones"></i>
-                    <span>Kill</span>
-                </div>
-                <div class="action-btn disabled" id="bringFEBtn">
-                    <i class="fas fa-magnet"></i>
-                    <span>Bring (FE)</span>
-                </div>
-                <div class="action-btn disabled" id="banBtn">
-                    <i class="fas fa-ban"></i>
-                    <span>Ban</span>
-                </div>
-                <div class="action-btn disabled" id="kickBtn">
-                    <i class="fas fa-door-open"></i>
-                    <span>Kick</span>
-                </div>
-                <div class="action-btn disabled" id="respawnBtn">
-                    <i class="fas fa-redo"></i>
-                    <span>Respawn</span>
-                </div>
-                <div class="action-btn disabled" id="jailBtn">
-                    <i class="fas fa-gavel"></i>
-                    <span>Jail</span>
-                </div>
-            `;
-            
-            // Check for backdoor to enable server actions
-            if (backdoorDetected) {
-                enableServerActions();
-            }
-        }
-        
-        function enableServerActions() {
-            document.querySelectorAll('#serverActions .action-btn').forEach(btn => {
-                btn.classList.remove('disabled');
-                btn.onclick = function() {
-                    const action = this.querySelector('span').textContent.toLowerCase().split(' ')[0];
-                    sendAction(action);
-                };
-            });
-        }
-        
-        function toggleAction(action) {
-            const btn = document.getElementById(`${action}Btn`);
-            activeToggles[action] = !activeToggles[action];
-            
-            btn.classList.toggle('active');
-            btn.querySelector('span').textContent = 
-                `${action.toUpperCase().replace(/_/g, ' ')} ${activeToggles[action] ? 'ON' : 'OFF'}`;
-            
-            sendAction(action, activeToggles[action] ? 'start' : 'stop');
-        }
-        
-        function sendAction(action, state = 'start') {
-            if (!selectedPlayer && action !== 'bringAll') {
-                log("Selecione um jogador primeiro", "warning");
-                return;
-            }
-            
-            if (!EXECUTOR_ID) {
-                log("Conecte-se a um executor primeiro", "error");
-                return;
-            }
-            
-            const playerName = selectedPlayer ? selectedPlayer.Name : '';
-            const isServerAction = ['kill', 'bringFE', 'ban', 'kick', 'respawn', 'jail'].includes(action);
-            
-            const command = {
-                type: 'command',
-                action: action,
-                target: playerName,
-                state: state,
-                timestamp: Date.now(),
-                mode: isServerAction ? 'serverside' : 'clientside'
-            };
-            
-            sendCommand(command);
-            log(`Comando ${action} ${state} enviado para ${playerName || 'todos'}`, "exec");
-        }
-        
         function checkBackdoorStatus() {
             if (!EXECUTOR_ID) return;
             
@@ -2725,10 +2966,7 @@
             db.ref(`executors/${EXECUTOR_ID}/backdoor`).once("value", snapshot => {
                 const result = snapshot.val();
                 if (result && result.hasBackdoor) {
-                    backdoorDetected = true;
-                    document.getElementById('backdoorBadge').style.display = 'flex';
-                    enableServerActions();
-                    log("Backdoor detectado - Ações ServerSide habilitadas", "warning");
+                    enableServerSideActions();
                 } else {
                     log("Backdoor não detectado - Ações ServerSide desabilitadas", "info");
                 }
@@ -3119,6 +3357,76 @@ end`;
                 editor.setValue("");
                 log("Editor limpo", "info");
             }
+        }
+        
+        /* ================= FUNÇÕES ADICIONAIS PARA SISTEMA DE BOTÕES ================= */
+        
+        // Adicionar novo botão dinamicamente
+        function addNewButton(mode, buttonConfig) {
+            if (!ACTIONS_CONFIG[mode]) {
+                log(`Modo ${mode} não encontrado`, "error");
+                return;
+            }
+            
+            // Verificar se botão já existe
+            const exists = ACTIONS_CONFIG[mode].some(b => b.id === buttonConfig.id);
+            if (exists) {
+                log(`Botão ${buttonConfig.id} já existe no modo ${mode}`, "warning");
+                return;
+            }
+            
+            // Adicionar botão à configuração
+            ACTIONS_CONFIG[mode].push(buttonConfig);
+            
+            // Inicializar toggle se necessário
+            if (buttonConfig.type === 'toggle') {
+                activeToggles[buttonConfig.id] = buttonConfig.defaultState || false;
+            }
+            
+            // Re-renderizar ações
+            renderAllActions();
+            
+            log(`Novo botão ${buttonConfig.name} adicionado ao modo ${mode}`, "success");
+        }
+        
+        // Remover botão existente
+        function removeButton(mode, buttonId) {
+            if (!ACTIONS_CONFIG[mode]) {
+                log(`Modo ${mode} não encontrado`, "error");
+                return;
+            }
+            
+            const index = ACTIONS_CONFIG[mode].findIndex(b => b.id === buttonId);
+            if (index === -1) {
+                log(`Botão ${buttonId} não encontrado no modo ${mode}`, "warning");
+                return;
+            }
+            
+            // Remover botão
+            const removedButton = ACTIONS_CONFIG[mode].splice(index, 1)[0];
+            
+            // Remover toggle state se existir
+            if (removedButton.type === 'toggle') {
+                delete activeToggles[buttonId];
+            }
+            
+            // Re-renderizar ações
+            renderAllActions();
+            
+            log(`Botão ${removedButton.name} removido do modo ${mode}`, "info");
+        }
+        
+        // Listar todos os botões disponíveis
+        function listAllButtons() {
+            console.log("=== BOTÕES CLIENT-SIDE ===");
+            ACTIONS_CONFIG.clientside.forEach(btn => {
+                console.log(`ID: ${btn.id}, Nome: ${btn.name}, Tipo: ${btn.type}`);
+            });
+            
+            console.log("\n=== BOTÕES SERVER-SIDE ===");
+            ACTIONS_CONFIG.serverside.forEach(btn => {
+                console.log(`ID: ${btn.id}, Nome: ${btn.name}, Tipo: ${btn.type}, Requer Backdoor: ${btn.requiresBackdoor || false}`);
+            });
         }
         
         /* ================= INITIALIZATION ================= */
