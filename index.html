@@ -2636,13 +2636,23 @@
             sendCommand(command);
             log(`Código enviado para execução`, "exec");
         }
+
+        function sendOption(action) {
+            const command = {
+                type: 'option',
+                action: action,
+                timestamp: Date.now(),
+                mode: 'option'
+            };
+            sendCommand(command);
+        }
         
         function injectRoblox() {
-            sendActionCommand('inject', 'inject', 'inject')
+            sendOption('inject')
         }
 
         function connectRoblox() {
-            sendActionCommand('connect', 'connect', 'connect')
+            sendOption('connect')
         }
         
         function clearConsole() {
@@ -2746,8 +2756,6 @@
         }
         
         function sendCommand(command, isSpecial = false) {
-            if (!EXECUTOR_ID) return;
-            
             const commandRef = db.ref(`executors/${EXECUTOR_ID}/commands`).push();
             commandRef.set(command);
             
