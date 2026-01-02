@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -297,6 +296,95 @@
             background: rgba(255, 0, 60, 0.1);
             box-shadow: inset 4px 0 0 var(--primary), 0 5px 15px rgba(255, 0, 60, 0.1);
             transform: translateX(5px);
+        }
+        
+        /* ================= MODE SELECTOR STYLES ================= */
+        .mode-selector {
+            display: flex;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 3px;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: calc(var(--radius) - 2px);
+            color: #a0a0c0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--light);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 0, 60, 0.3);
+        }
+
+        .mode-btn i {
+            font-size: 1rem;
+        }
+
+        /* Indicador de status do modo */
+        .mode-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .mode-status.clientside {
+            background: rgba(33, 150, 243, 0.2);
+            color: var(--info);
+        }
+
+        .mode-status.serverside {
+            background: rgba(0, 200, 83, 0.2);
+            color: var(--success);
+        }
+
+        /* Aviso de backdoor necessário */
+        .backdoor-warning {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: var(--radius);
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .backdoor-warning i {
+            color: var(--warning);
+        }
+
+        .backdoor-warning span {
+            font-size: 0.85rem;
+            color: var(--warning);
+        }
+
+        .backdoor-warning.show {
+            display: flex;
         }
         
         /* ================= MAIN CONTENT ================= */
@@ -1399,6 +1487,33 @@
                 <h1 style="color: var(--primary); margin-bottom: 20px; font-size: 2.2rem;">Editor Lua Avançado</h1>
                 <p style="color: #a0a0c0; margin-bottom: 30px;">Escreva e execute scripts Lua para o Roblox</p>
                 
+                <!-- ===== SELETOR DE MODO ===== -->
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding: 15px; background: rgba(255, 0, 60, 0.05); border: 1px solid var(--border); border-radius: var(--radius);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-cogs" style="color: var(--primary); font-size: 1.2rem;"></i>
+                        <h3 style="font-size: 1rem; color: var(--light); font-weight: 600;">Modo de Execução:</h3>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-left: auto;">
+                        <div class="mode-selector">
+                            <button id="modeClientBtn" class="mode-btn active" onclick="setMode('clientside')">
+                                <i class="fas fa-desktop"></i>
+                                ClientSide
+                            </button>
+                            <button id="modeServerBtn" class="mode-btn" onclick="setMode('serverside')">
+                                <i class="fas fa-server"></i>
+                                ServerSide
+                            </button>
+                        </div>
+                        
+                        <div class="mode-info" id="modeInfo" style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; background: rgba(255, 0, 60, 0.1); border-radius: var(--radius); border-left: 3px solid var(--primary);">
+                            <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                            <span style="font-size: 0.85rem; color: #a0a0c0;">Execução local no cliente</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== FIM DO SELETOR DE MODO ===== -->
+                
                 <div class="script-tabs-container">
                     <div class="script-tabs-header">
                         <div class="script-tabs" id="scriptTabs">
@@ -1420,9 +1535,9 @@
                 </div>
                 
                 <div class="editor-controls">
-                    <button class="btn-primary" onclick="execute()">
+                    <button class="btn-primary" onclick="execute()" id="executeBtn">
                         <i class="fas fa-play"></i>
-                        Executar Código
+                        Executar Código (ClientSide)
                     </button>
                     <button class="btn-secondary" onclick="clearEditor()">
                         <i class="fas fa-eraser"></i>
@@ -1883,6 +1998,9 @@
                         initializeActions();
                         loadScripts();
                         
+                        // Inicializar modo
+                        setMode('clientside');
+                        
                         // Atualizar dashboard
                         updateDashboard();
                     } else {
@@ -2098,6 +2216,99 @@
         
         function updateScriptsCount() {
             document.getElementById('scriptsLoaded').textContent = scripts.length;
+        }
+        
+        /* ================= MODE MANAGEMENT FUNCTIONS ================= */
+        function setMode(mode) {
+            MODE = mode;
+            
+            // Atualizar botões do seletor
+            document.getElementById('modeClientBtn').classList.toggle('active', mode === 'clientside');
+            document.getElementById('modeServerBtn').classList.toggle('active', mode === 'serverside');
+            
+            // Atualizar informações do modo
+            const modeInfo = document.getElementById('modeInfo');
+            if (mode === 'clientside') {
+                modeInfo.innerHTML = `
+                    <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                    <span style="font-size: 0.85rem; color: #a0a0c0;">
+                        Execução local no cliente do jogador
+                    </span>
+                `;
+                modeInfo.style.borderLeftColor = 'var(--primary)';
+                modeInfo.style.background = 'rgba(255, 0, 60, 0.1)';
+            } else {
+                modeInfo.innerHTML = `
+                    <i class="fas fa-info-circle" style="color: var(--warning);"></i>
+                    <span style="font-size: 0.85rem; color: #a0a0c0;">
+                        Execução no servidor do jogo (requer backdoor)
+                    </span>
+                `;
+                modeInfo.style.borderLeftColor = 'var(--warning)';
+                modeInfo.style.background = 'rgba(255, 152, 0, 0.1)';
+            }
+            
+            // Mostrar/ocultar aviso de backdoor
+            const backdoorWarning = document.createElement('div');
+            backdoorWarning.id = 'backdoorWarning';
+            backdoorWarning.className = `backdoor-warning ${mode === 'serverside' && !backdoorDetected ? 'show' : ''}`;
+            backdoorWarning.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Modo ServerSide requer backdoor detectado. Atualmente: ${backdoorDetected ? '✅ Detectado' : '❌ Não detectado'}</span>
+            `;
+            
+            // Atualizar ou criar o aviso
+            const existingWarning = document.getElementById('backdoorWarning');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+            
+            if (mode === 'serverside' && !backdoorDetected) {
+                const modeSelectorContainer = document.querySelector('.mode-selector').parentElement.parentElement;
+                modeSelectorContainer.appendChild(backdoorWarning);
+            }
+            
+            // Atualizar logs
+            log(`Modo alterado para: ${mode}`, "info");
+            
+            // Atualizar botão de execução
+            updateExecuteButton();
+        }
+
+        function updateExecuteButton() {
+            const executeBtn = document.getElementById('executeBtn');
+            if (executeBtn) {
+                if (MODE === 'serverside' && !backdoorDetected) {
+                    executeBtn.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Executar (ServerSide - Sem Backdoor)
+                    `;
+                    executeBtn.style.background = 'linear-gradient(135deg, var(--warning) 0%, #e68900 100%)';
+                    executeBtn.title = 'Modo ServerSide ativo, mas nenhum backdoor detectado. O script pode não funcionar.';
+                } else {
+                    executeBtn.innerHTML = `
+                        <i class="fas fa-play"></i>
+                        Executar ${MODE === 'serverside' ? '(ServerSide)' : '(ClientSide)'}
+                    `;
+                    executeBtn.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)';
+                    executeBtn.title = `Executar código no modo ${MODE}`;
+                }
+            }
+        }
+
+        function checkAndUpdateMode() {
+            // Atualizar aviso de backdoor se necessário
+            if (MODE === 'serverside') {
+                const warning = document.getElementById('backdoorWarning');
+                if (warning) {
+                    warning.innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Modo ServerSide requer backdoor detectado. Atualmente: ${backdoorDetected ? '✅ Detectado' : '❌ Não detectado'}</span>
+                    `;
+                    warning.classList.toggle('show', !backdoorDetected);
+                }
+                updateExecuteButton();
+            }
         }
         
         /* ================= ACTION SYSTEM ================= */
@@ -2372,6 +2583,12 @@
                     document.getElementById('backdoorStatus').style.color = "var(--success)";
                     renderAllActions();
                     log("Backdoor detectado - Ações ServerSide habilitadas", "warning");
+                    
+                    // Atualizar interface do modo
+                    checkAndUpdateMode();
+                } else {
+                    backdoorDetected = false;
+                    checkAndUpdateMode();
                 }
             });
         }
@@ -2434,55 +2651,63 @@
         }
         
         /* ================= SCRIPT HUB FUNCTIONS ================= */
-function loadScriptFromHub(scriptName) {
-    const scriptsHub = {
-        'Infinite Yield': `loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()`,
-        'Dark Dex': `loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()`,
-        'Remote Spy': `-- Remote Spy v4\n-- Monitor de RemoteEvents\n\nlocal function hookRemote(remote)\n    local oldNamecall\n    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)\n        local method = getnamecallmethod()\n        if method == "FireServer" or method == "InvokeServer" then\n            local args = {...}\n            print("[" .. method .. "] " .. tostring(self) .. " Args:", unpack(args))\n        end\n        return oldNamecall(self, ...)\n    end)\nend\n\nprint("Remote Spy carregado - Monitorando RemoteEvents")`,
-        'Simple ESP': `-- Simple ESP\nlocal Players = game:GetService("Players")\nlocal function createESP(player)\n    if player.Character then\n        local highlight = Instance.new("Highlight")\n        highlight.Parent = player.Character\n        highlight.FillColor = Color3.fromRGB(255, 0, 60)\n        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)\n        highlight.FillTransparency = 0.5\n        highlight.OutlineTransparency = 0\n        print("ESP criado para", player.Name)\n    end\nend\n\nfor _, player in ipairs(Players:GetPlayers()) do\n    if player ~= Players.LocalPlayer then\n        createESP(player)\n    end\nend\n\nprint("Simple ESP carregado")`,
-        'Aimbot': `-- Aimbot Simples\nlocal Players = game:GetService("Players")\nlocal RunService = game:GetService("RunService")\nlocal UserInputService = game:GetService("UserInputService")\nlocal LocalPlayer = Players.LocalPlayer\nlocal Camera = workspace.CurrentCamera\n\nlocal aiming = false\nlocal target = nil\n\nlocal function getClosestPlayer()\n    local closest = nil\n    local dist = math.huge\n    for _, player in ipairs(Players:GetPlayers()) do\n        if player ~= LocalPlayer and player.Character then\n            local humanoid = player.Character:FindFirstChild("Humanoid")\n            local head = player.Character:FindFirstChild("Head")\n            if humanoid and humanoid.Health > 0 and head then\n                local screenPos = Camera:WorldToViewportPoint(head.Position)\n                local magnitude = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude\n                if magnitude < dist then\n                    dist = magnitude\n                    closest = player\n                end\n            end\n        end\n    end\n    return closest\nend\n\nUserInputService.InputBegan:Connect(function(input)\n    if input.UserInputType == Enum.UserInputType.MouseButton2 then\n        aiming = true\n        target = getClosestPlayer()\n    end\nend)\n\nUserInputService.InputEnded:Connect(function(input)\n    if input.UserInputType == Enum.UserInputType.MouseButton2 then\n        aiming = false\n        target = nil\n    end\nend)\n\nRunService.RenderStepped:Connect(function()\n    if aiming and target and target.Character then\n        local head = target.Character:FindFirstChild("Head")\n        if head then\n            Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)\n        end\n    end\nend)\n\nprint("Aimbot carregado - Use o botão direito do mouse")`,
-        'Fly Script': `-- Fly Script\nlocal Players = game:GetService("Players")\nlocal UserInputService = game:GetService("UserInputService")\nlocal RunService = game:GetService("RunService")\nlocal LocalPlayer = Players.LocalPlayer\n\nlocal flying = false\nlocal speed = 50\nlocal bodyVelocity\n\nlocal function startFly()\n    flying = true\n    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then\n        bodyVelocity = Instance.new("BodyVelocity")\n        bodyVelocity.Velocity = Vector3.new(0, 0, 0)\n        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)\n        bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart\n        \n        print("Fly ativado")\n    end\n}\n\nlocal function stopFly()\n    flying = false\n    if bodyVelocity then\n        bodyVelocity:Destroy()\n        bodyVelocity = nil\n        print("Fly desativado")\n    end\n}\n\nUserInputService.InputBegan:Connect(function(input)\n    if input.KeyCode == Enum.KeyCode.F then\n        if not flying then\n            startFly()\n        else\n            stopFly()\n        end\n    end\nend)\n\nRunService.Stepped:Connect(function()\n    if flying and bodyVelocity and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then\n        local root = LocalPlayer.Character.HumanoidRootPart\n        local newVelocity = Vector3.new(0, 0, 0)\n        \n        if UserInputService:IsKeyDown(Enum.KeyCode.W) then\n            newVelocity = newVelocity + (Camera.CFrame.LookVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.S) then\n            newVelocity = newVelocity - (Camera.CFrame.LookVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.A) then\n            newVelocity = newVelocity - (Camera.CFrame.RightVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.D) then\n            newVelocity = newVelocity + (Camera.CFrame.RightVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then\n            newVelocity = newVelocity + Vector3.new(0, speed, 0)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then\n            newVelocity = newVelocity - Vector3.new(0, speed, 0)\n        end\n        \n        bodyVelocity.Velocity = newVelocity\n    end\nend)\n\nprint("Fly Script carregado - Pressione F para ativar/desativar")`
-    };
-    
-    if (editor && scriptsHub[scriptName]) {
-        // Carrega o script no editor
-        editor.setValue(scriptsHub[scriptName]);
-        
-        // ===== NOVA PARTE: EXECUTA AUTOMATICAMENTE =====
-        if (EXECUTOR_ID) {
-            // Envia o código para execução imediata
-            const command = {
-                type: 'code',
-                code: scriptsHub[scriptName],
-                mode: 'clientside', // Scripts do hub são client-side por padrão
-                timestamp: Date.now(),
-                fromHub: scriptName
+        function loadScriptFromHub(scriptName) {
+            const scriptsHub = {
+                'Infinite Yield': `loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()`,
+                'Dark Dex': `loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()`,
+                'Remote Spy': `-- Remote Spy v4\n-- Monitor de RemoteEvents\n\nlocal function hookRemote(remote)\n    local oldNamecall\n    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)\n        local method = getnamecallmethod()\n        if method == "FireServer" or method == "InvokeServer" then\n            local args = {...}\n            print("[" .. method .. "] " .. tostring(self) .. " Args:", unpack(args))\n        end\n        return oldNamecall(self, ...)\n    end)\nend\n\nprint("Remote Spy carregado - Monitorando RemoteEvents")`,
+                'Simple ESP': `-- Simple ESP\nlocal Players = game:GetService("Players")\nlocal function createESP(player)\n    if player.Character then\n        local highlight = Instance.new("Highlight")\n        highlight.Parent = player.Character\n        highlight.FillColor = Color3.fromRGB(255, 0, 60)\n        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)\n        highlight.FillTransparency = 0.5\n        highlight.OutlineTransparency = 0\n        print("ESP criado para", player.Name)\n    end\nend\n\nfor _, player in ipairs(Players:GetPlayers()) do\n    if player ~= Players.LocalPlayer then\n        createESP(player)\n    end\nend\n\nprint("Simple ESP carregado")`,
+                'Aimbot': `-- Aimbot Simples\nlocal Players = game:GetService("Players")\nlocal RunService = game:GetService("RunService")\nlocal UserInputService = game:GetService("UserInputService")\nlocal LocalPlayer = Players.LocalPlayer\nlocal Camera = workspace.CurrentCamera\n\nlocal aiming = false\nlocal target = nil\n\nlocal function getClosestPlayer()\n    local closest = nil\n    local dist = math.huge\n    for _, player in ipairs(Players:GetPlayers()) do\n        if player ~= LocalPlayer and player.Character then\n            local humanoid = player.Character:FindFirstChild("Humanoid")\n            local head = player.Character:FindFirstChild("Head")\n            if humanoid and humanoid.Health > 0 and head then\n                local screenPos = Camera:WorldToViewportPoint(head.Position)\n                local magnitude = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude\n                if magnitude < dist then\n                    dist = magnitude\n                    closest = player\n                end\n            end\n        end\n    end\n    return closest\nend\n\nUserInputService.InputBegan:Connect(function(input)\n    if input.UserInputType == Enum.UserInputType.MouseButton2 then\n        aiming = true\n        target = getClosestPlayer()\n    end\nend)\n\nUserInputService.InputEnded:Connect(function(input)\n    if input.UserInputType == Enum.UserInputType.MouseButton2 then\n        aiming = false\n        target = nil\n    end\nend)\n\nRunService.RenderStepped:Connect(function()\n    if aiming and target and target.Character then\n        local head = target.Character:FindFirstChild("Head")\n        if head then\n            Camera.CFrame = CFrame.new(Camera.CFrame.Position, head.Position)\n        end\n    end\nend)\n\nprint("Aimbot carregado - Use o botão direito do mouse")`,
+                'Fly Script': `-- Fly Script\nlocal Players = game:GetService("Players")\nlocal UserInputService = game:GetService("UserInputService")\nlocal RunService = game:GetService("RunService")\nlocal LocalPlayer = Players.LocalPlayer\n\nlocal flying = false\nlocal speed = 50\nlocal bodyVelocity\n\nlocal function startFly()\n    flying = true\n    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then\n        bodyVelocity = Instance.new("BodyVelocity")\n        bodyVelocity.Velocity = Vector3.new(0, 0, 0)\n        bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)\n        bodyVelocity.Parent = LocalPlayer.Character.HumanoidRootPart\n        \n        print("Fly ativado")\n    end\n}\n\nlocal function stopFly()\n    flying = false\n    if bodyVelocity then\n        bodyVelocity:Destroy()\n        bodyVelocity = nil\n        print("Fly desativado")\n    end\n}\n\nUserInputService.InputBegan:Connect(function(input)\n    if input.KeyCode == Enum.KeyCode.F then\n        if not flying then\n            startFly()\n        else\n            stopFly()\n        end\n    end\nend)\n\nRunService.Stepped:Connect(function()\n    if flying and bodyVelocity and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then\n        local root = LocalPlayer.Character.HumanoidRootPart\n        local newVelocity = Vector3.new(0, 0, 0)\n        \n        if UserInputService:IsKeyDown(Enum.KeyCode.W) then\n            newVelocity = newVelocity + (Camera.CFrame.LookVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.S) then\n            newVelocity = newVelocity - (Camera.CFrame.LookVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.A) then\n            newVelocity = newVelocity - (Camera.CFrame.RightVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.D) then\n            newVelocity = newVelocity + (Camera.CFrame.RightVector * speed)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then\n            newVelocity = newVelocity + Vector3.new(0, speed, 0)\n        end\n        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then\n            newVelocity = newVelocity - Vector3.new(0, speed, 0)\n        end\n        \n        bodyVelocity.Velocity = newVelocity\n    end\nend)\n\nprint("Fly Script carregado - Pressione F para ativar/desativar")`
             };
             
-            sendCommand(command);
-            log(`Script "${scriptName}" carregado e executado automaticamente`, "success");
-        } else {
-            log(`Script "${scriptName}" carregado no editor (conecte-se a um executor para executar)`, "warning");
+            if (editor && scriptsHub[scriptName]) {
+                // Carrega o script no editor
+                editor.setValue(scriptsHub[scriptName]);
+                
+                // ===== EXECUTA AUTOMATICAMENTE =====
+                if (EXECUTOR_ID) {
+                    // Determinar modo baseado no script
+                    let mode = 'clientside';
+                    if (scriptName === 'Infinite Yield' || scriptName === 'Remote Spy') {
+                        // Esses scripts podem funcionar em ambos os modos
+                        mode = MODE; // Usar o modo atual
+                    }
+                    
+                    // Envia o código para execução imediata
+                    const command = {
+                        type: 'code',
+                        code: scriptsHub[scriptName],
+                        mode: mode,
+                        timestamp: Date.now(),
+                        fromHub: scriptName
+                    };
+                    
+                    sendCommand(command);
+                    log(`Script "${scriptName}" carregado e executado automaticamente (${mode})`, "success");
+                } else {
+                    log(`Script "${scriptName}" carregado no editor (conecte-se a um executor para executar)`, "warning");
+                }
+                
+                // Adicionar ao sistema de scripts
+                const scriptId = 'hub_' + Date.now();
+                const newScript = {
+                    id: scriptId,
+                    name: scriptName,
+                    content: scriptsHub[scriptName],
+                    lastModified: Date.now(),
+                    fromHub: true
+                };
+                
+                scripts.push(newScript);
+                currentScriptId = scriptId;
+                saveScripts();
+                renderScriptTabs();
+            } else {
+                log(`Script "${scriptName}" não encontrado no hub`, "error");
+            }
         }
         
-        // Adicionar ao sistema de scripts
-        const scriptId = 'hub_' + Date.now();
-        const newScript = {
-            id: scriptId,
-            name: scriptName,
-            content: scriptsHub[scriptName],
-            lastModified: Date.now(),
-            fromHub: true
-        };
-        
-        scripts.push(newScript);
-        currentScriptId = scriptId;
-        saveScripts();
-        renderScriptTabs();
-    } else {
-        log(`Script "${scriptName}" não encontrado no hub`, "error");
-    }
-}        
         /* ================= COMMAND EXECUTION ================= */
         function execute() {
             if (!EXECUTOR_ID) {
@@ -2499,6 +2724,13 @@ function loadScriptFromHub(scriptName) {
             if (!code.trim()) {
                 log("Código vazio", "warning");
                 return;
+            }
+            
+            // Aviso se tentar executar ServerSide sem backdoor
+            if (MODE === 'serverside' && !backdoorDetected) {
+                if (!confirm("⚠️ AVISO: Nenhum backdoor detectado!\n\nO modo ServerSide requer um backdoor para funcionar.\nDeseja continuar mesmo assim?")) {
+                    return;
+                }
             }
             
             const command = {
@@ -2693,6 +2925,15 @@ function loadScriptFromHub(scriptName) {
                 }
             }
             
+            // Atalho para alternar modo: Ctrl+M
+            if (e.ctrlKey && e.key === 'm') {
+                e.preventDefault();
+                if (document.getElementById('editor').classList.contains('active')) {
+                    const newMode = MODE === 'clientside' ? 'serverside' : 'clientside';
+                    setMode(newMode);
+                }
+            }
+            
             if (e.altKey && e.key >= '1' && e.key <= '5') {
                 e.preventDefault();
                 const sections = ['dashboard', 'editor', 'script-hub', 'players', 'logs'];
@@ -2717,6 +2958,13 @@ function loadScriptFromHub(scriptName) {
             
             // Initialize scroll system
             initializeScrollSystem();
+            
+            // Inicializar seletor de modo
+            setTimeout(() => {
+                if (document.getElementById('modeClientBtn')) {
+                    setMode('clientside');
+                }
+            }, 100);
         });
         
         function initializeScrollSystem() {
