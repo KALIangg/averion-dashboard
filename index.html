@@ -1388,9 +1388,9 @@
                                         Ações Rápidas
                                     </div>
                                     <div style="margin-top: 20px; display: grid; gap: 10px;">
-                                        <button class="btn-secondary" onclick="executeScript()" style="width: 100%;">
+                                        <button class="btn-secondary" onclick="connectMenu()" style="width: 100%;">
                                             <i class="fas fa-play"></i>
-                                            Executar Script
+                                            Conectar Client
                                         </button>
                                         <button class="btn-secondary" onclick="injectRoblox()" style="width: 100%;">
                                             <i class="fas fa-syringe"></i>
@@ -2638,10 +2638,11 @@
         }
         
         function injectRoblox() {
-            log("Injetando no Roblox...", "info");
-            setTimeout(() => {
-                log("Injeção bem sucedida", "success");
-            }, 2000);
+            sendActionCommand('inject', 'inject', 'inject')
+        }
+
+        function connectRoblox() {
+            sendActionCommand('connect', 'connect', 'connect')
         }
         
         function clearConsole() {
