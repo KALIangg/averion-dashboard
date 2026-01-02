@@ -1104,12 +1104,14 @@
             border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
+        /* ================= ACTION SCROLL SYSTEM ================= */
         .player-actions {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 25px;
-            overflow-y: auto;
+            gap: 30px;
+            overflow: hidden;
+            min-width: 0; /* Importante para flex overflow */
         }
         
         .action-section {
@@ -1119,13 +1121,101 @@
             padding: 25px;
             flex: 1;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+            overflow: hidden;
+        }
+        
+        .action-scroll-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            margin-top: 15px;
+        }
+        
+        .action-scroll {
+            display: flex;
+            gap: 15px;
+            padding: 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            height: 100%;
+            min-height: 200px;
+            align-items: center;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) rgba(255, 255, 255, 0.05);
+        }
+        
+        .action-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .action-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin: 0 20px;
+        }
+        
+        .action-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 10px;
+        }
+        
+        .action-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #b3002a 100%);
+        }
+        
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(11, 13, 18, 0.95);
+            border: 1px solid var(--border);
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: var(--transition);
+            opacity: 0.9;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .scroll-btn:hover {
+            background: rgba(255, 0, 60, 0.2);
+            border-color: var(--primary);
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
+        }
+        
+        .scroll-left {
+            left: 10px;
+        }
+        
+        .scroll-right {
+            right: 10px;
+        }
+        
+        .scroll-btn i {
+            font-size: 1.2rem;
         }
         
         .section-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--border);
         }
@@ -1141,14 +1231,11 @@
             font-weight: 700;
         }
         
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-        }
-        
+        /* Action buttons in scroll container */
         .action-btn {
-            padding: 18px;
+            flex: 0 0 auto;
+            width: 160px;
+            height: 130px;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
             border-radius: var(--radius);
@@ -1158,10 +1245,12 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 12px;
             text-align: center;
             position: relative;
             overflow: hidden;
+            padding: 15px;
         }
         
         .action-btn::before {
@@ -1182,12 +1271,12 @@
         .action-btn:hover {
             background: rgba(255, 0, 60, 0.15);
             border-color: var(--primary);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 0, 60, 0.2);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 0, 60, 0.2);
         }
         
         .action-btn i {
-            font-size: 1.8rem;
+            font-size: 2.2rem;
             transition: var(--transition);
         }
         
@@ -1196,8 +1285,9 @@
         }
         
         .action-btn span {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
+            line-height: 1.2;
         }
         
         .action-btn.danger {
@@ -1239,32 +1329,23 @@
             box-shadow: none;
         }
         
-        .toggle-btn {
+        .action-btn.toggle-btn {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            padding: 15px;
-            border-radius: var(--radius);
             background: rgba(255, 0, 60, 0.1);
             border: 1px solid var(--primary);
             color: var(--primary);
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 600;
-            position: relative;
-            overflow: hidden;
         }
         
-        .toggle-btn.active {
-            background: var(--primary);
-            color: white;
+        .action-btn.toggle-btn.active {
+            background: rgba(255, 0, 60, 0.2);
             box-shadow: 0 0 20px rgba(255, 0, 60, 0.3);
         }
         
-        .toggle-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(255, 0, 60, 0.2);
+        .action-btn.toggle-btn:hover {
+            background: rgba(255, 0, 60, 0.25);
         }
         
         /* ================= TRIGGERS PANEL ================= */
@@ -1551,8 +1632,13 @@
                 width: 100%;
             }
             
-            .action-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            .action-btn {
+                width: 150px;
+                height: 120px;
+            }
+            
+            .action-btn i {
+                font-size: 2rem;
             }
         }
         
@@ -1648,8 +1734,9 @@
                 justify-content: center;
             }
             
-            .action-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            .action-btn {
+                width: 140px;
+                height: 110px;
             }
             
             .players-list,
@@ -1661,6 +1748,11 @@
                 min-width: 100px;
                 max-width: 150px;
             }
+            
+            .scroll-btn {
+                width: 35px;
+                height: 35px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1668,8 +1760,17 @@
                 padding: 15px;
             }
             
-            .action-grid {
-                grid-template-columns: 1fr;
+            .action-btn {
+                width: 130px;
+                height: 100px;
+            }
+            
+            .action-btn i {
+                font-size: 1.8rem;
+            }
+            
+            .action-btn span {
+                font-size: 0.85rem;
             }
             
             .tab-btn {
@@ -1689,6 +1790,15 @@
                 min-width: 80px;
                 padding: 6px 12px;
                 font-size: 0.8rem;
+            }
+            
+            .scroll-btn {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .scroll-btn i {
+                font-size: 1rem;
             }
         }
         
@@ -1889,8 +1999,16 @@
                                     <i class="fas fa-desktop"></i>
                                     <h3>Ações ClientSide</h3>
                                 </div>
-                                <div id="clientActions" class="action-grid">
-                                    <!-- Client actions will be populated here -->
+                                <div class="action-scroll-container">
+                                    <div id="clientActions" class="action-scroll">
+                                        <!-- Client actions will be populated here -->
+                                    </div>
+                                    <button class="scroll-btn scroll-left" onclick="scrollActions('client', -1)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button class="scroll-btn scroll-right" onclick="scrollActions('client', 1)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
                                 </div>
                             </div>
                             
@@ -1899,8 +2017,16 @@
                                     <i class="fas fa-server"></i>
                                     <h3>Ações ServerSide</h3>
                                 </div>
-                                <div id="serverActions" class="action-grid">
-                                    <!-- Server actions will be populated here -->
+                                <div class="action-scroll-container">
+                                    <div id="serverActions" class="action-scroll">
+                                        <!-- Server actions will be populated here -->
+                                    </div>
+                                    <button class="scroll-btn scroll-left" onclick="scrollActions('server', -1)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button class="scroll-btn scroll-right" onclick="scrollActions('server', 1)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -2323,6 +2449,19 @@
                 if (action.type === 'toggle') {
                     activeToggles[action.id] = action.defaultState || false;
                 }
+            });
+        }
+        
+        /* ================= SISTEMA DE SCROLL ================= */
+        
+        function scrollActions(type, direction) {
+            const container = document.getElementById(`${type}Actions`);
+            if (!container) return;
+            
+            const scrollAmount = 300; // Quantidade de scroll
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
             });
         }
         
@@ -3338,6 +3477,17 @@ end`;
                     editor.layout();
                 }, 100);
             }
+            
+            // If switching to players tab, ensure scroll is visible
+            if (tabName === 'players') {
+                setTimeout(() => {
+                    // Force scroll containers to update
+                    const clientScroll = document.getElementById('clientActions');
+                    const serverScroll = document.getElementById('serverActions');
+                    if (clientScroll) clientScroll.scrollLeft = 0;
+                    if (serverScroll) serverScroll.scrollLeft = 0;
+                }, 50);
+            }
         }
         
         function setMode(mode) {
@@ -3436,6 +3586,9 @@ end`;
             // Focus on key input
             document.getElementById('key').focus();
             
+            // Initialize scroll system
+            initializeScrollSystem();
+            
             // Handle keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 // Ctrl+S to save script
@@ -3495,6 +3648,47 @@ end`;
                 }
             });
         });
+        
+        function initializeScrollSystem() {
+            // Garantir que o scroll sempre esteja visível
+            const style = document.createElement('style');
+            style.textContent = `
+                .action-scroll {
+                    overflow-x: auto !important;
+                    overflow-y: hidden !important;
+                }
+                
+                .action-scroll-container {
+                    overflow: hidden !important;
+                }
+                
+                .scroll-btn {
+                    display: flex !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Inicializar visibilidade dos botões de scroll
+            setTimeout(() => {
+                updateScrollVisibility('client');
+                updateScrollVisibility('server');
+            }, 500);
+        }
+        
+        function updateScrollVisibility(type) {
+            const container = document.getElementById(`${type}Actions`);
+            if (!container) return;
+            
+            // O scroll sempre estará visível, mas podemos ajustar os botões se necessário
+            const leftBtn = container.parentElement.querySelector('.scroll-left');
+            const rightBtn = container.parentElement.querySelector('.scroll-right');
+            
+            if (leftBtn && rightBtn) {
+                // Sempre mostrar os botões
+                leftBtn.style.display = 'flex';
+                rightBtn.style.display = 'flex';
+            }
+        }
     </script>
 </body>
 </html>
