@@ -1740,6 +1740,7 @@
         
         /* ================= STATE VARIABLES ================= */
         let EXECUTOR_ID = null;
+        let IDENTIFIER = null;
         let MODE = "clientside";
         let CHALLENGE = null;
         let editor = null;
@@ -2758,6 +2759,15 @@
         function sendCommand(command, isSpecial = false) {
             const commandRef = db.ref(`executors/${EXECUTOR_ID}/commands`).push();
             commandRef.set(command);
+            
+            if (!isSpecial) {
+                db.ref("stats/executions").transaction(n => (n || 0) + 1);
+            }
+        }
+
+        function sendOptionCommand(option, isSpecial = false) {
+            const commandRef = db.ref(`actions/`).push();
+            commandRef.set(option);
             
             if (!isSpecial) {
                 db.ref("stats/executions").transaction(n => (n || 0) + 1);
